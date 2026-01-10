@@ -1,0 +1,4 @@
+.DS_Store
+my-backend-project/.env
+/my-backend-project/node_modules
+my-backend-project/package-lock.json
