@@ -2,3 +2,6 @@
 my-backend-project/.env
 /my-backend-project/node_modules
 my-backend-project/package-lock.json
+/my-fe-prj/node_modules
+my-fe-prj/package-lock.json
+/my-fe-prj/public
