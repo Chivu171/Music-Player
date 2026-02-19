@@ -1,5 +1,5 @@
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const userController = require('../controllers/UserController');
 const isAuthenticated = require('../middleware/isAuthenticated'); // Import middleware
 
@@ -8,10 +8,14 @@ const isAuthenticated = require('../middleware/isAuthenticated'); // Import midd
 // GET /api/songs
 router.post('/register', userController.register);
 
-router.get('/profile', isAuthenticated, (req,res)=>{
+router.get('/profile', isAuthenticated, (req, res) => {
     res.send(`Welcome User ID: ${req.user.id}`);
 })
-router.post('/login',userController.login);
+router.post('/login', userController.login);
+router.get('/me', isAuthenticated, userController.getMe);
+router.post('/updateProfile', isAuthenticated, userController.updateProfile);
+router.post('/changePassword', isAuthenticated, userController.changePassword);
+
 
 
 

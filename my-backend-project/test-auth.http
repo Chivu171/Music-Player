@@ -1,0 +1,48 @@
+### Biến môi trường
+@baseUrl = http://localhost:8000/api/auth
+@token = {{login.response.body.user.token}}
+
+### 1. Đăng ký tài khoản mới
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### 2. Đăng nhập
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### 3. Lấy thông tin cá nhân (Profile)
+GET {{baseUrl}}/me
+Authorization: Bearer {{token}}
+
+### 4. Cập nhật Profile
+POST {{baseUrl}}/updateProfile
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "fullName": "Người Dùng Thử",
+    "avatar": "https://i.pravatar.cc/150?u=testuser",
+    "bio": "Yêu nhạc Rock và những đêm trăng."
+}
+
+### 5. Đổi mật khẩu
+POST {{baseUrl}}/changePassword
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "oldPassword": "password123",
+    "newPassword": "newpassword456"
+}
