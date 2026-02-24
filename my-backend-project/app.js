@@ -31,7 +31,7 @@ app.use('/api/songs', songRoute);
 app.use('/api/auth', userRoute);
 app.use('/api/stream', streamRoute);
 app.use('/api/playlists', playlistRoute);
-
+app.use("/upload", require("./src/routes/upload"));
 
 // Khởi động server
 app.listen(port, () => {
