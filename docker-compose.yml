@@ -1,0 +1,26 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: music-player-db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./my-backend-project
+      dockerfile: Dockerfile
+    container_name: music-player-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: development
+      DB_URI: mongodb://mongodb:27017/music-player-db
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo-data:
