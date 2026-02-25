@@ -1,60 +1,119 @@
 const PlayListService = require('../services/PlayListService');
 
-const createPlayList = async (req,res)=>{
-    try{
-        const playlist = await PlayListService.createPlayList(req.body, req.user.id);
-        res.status(201).json({ message: 'Playlist was successfully created!', playlist });
-    }
-    catch(error){
-        res.status(400).json({ message: error.message });
-    }
-}
+/**
+ * 1. Tạo Playlist cho người dùng (type: 'user-playlist')
+ */
+const createUserPlaylist = async (req, res) => {
+  try {
+    const playlist = await PlayListService.createUserPlaylist(req.body, req.user.id);
+    res.status(201).json({ message: 'Playlist đã được tạo thành công!', playlist });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
-const addSong = async(req,res)=>{
-    try{
-        const { playlistId, songId } = req.body;
 
-        const playlist  = await PlayListService.addSongToPlayList(playlistId, songId)
-        res.status(200).json({ message: 'The song was added', playlist: playlist });
+const createAlbum = async (req, res) => {
+  try {
+    const album = await PlayListService.createAlbum(req.body, req.user.id);
+    res.status(201).json({ message: 'Album đã được tạo thành công!', album });
+  } catch (error) {
+    res.status(403).json({ message: error.message });
+  }
+};
 
-    }
-    catch(error){
-        res.status(400).json({ message: error.message });
 
-    }
-}
+const updatePlayList = async (req, res) => {
+  try {
+    const updated = await PlayListService.updatePlayList(req.params.id, req.body, req.user.id);
+    res.status(200).json({ message: 'Cập nhật Playlist thành công!', playlist: updated });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+const deletePlayList = async (req, res) => {
+  try {
+    await PlayListService.deletePlayList(req.params.id, req.user.id);
+    res.status(200).json({ message: 'Đã xóa Playlist thành công!' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+const addSong = async (req, res) => {
+  try {
+    const { playlistId, songId } = req.body;
+    const playlist = await PlayListService.addSongToPlayList(playlistId, songId, req.user.id);
+    res.status(200).json({ message: 'Đã thêm bài hát vào Playlist!', playlist });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+const removeSong = async (req, res) => {
+  try {
+    const { playlistId, songId } = req.body;
+    const playlist = await PlayListService.removeSongFromPlaylist(playlistId, songId, req.user.id);
+    res.status(200).json({ message: 'Đã xóa bài hát khỏi Playlist!', playlist });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+const getUserPlaylists = async (req, res) => {
+  try {
+    const playlists = await PlayListService.getUserPlaylist(req.user.id);
+    res.status(200).json(playlists);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+const getAllAlbums = async (req, res) => {
+  try {
+    const albums = await PlayListService.getAllAlbums();
+    res.status(200).json(albums);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 const getById = async (req, res) => {
-    try {
-      const playlist = await PlayListService.getPlayListByID(req.params.id);
-      res.status(200).json(playlist);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  };
+  try {
+    const playlist = await PlayListService.getPlayListByID(req.params.id);
+    res.status(200).json(playlist);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
 
-  const removeSong = async (req, res) => {
-    try {
-      const { playlistId, songId } = req.body;
-      const updatedPlaylist = await PlayListService.removeSongFromPlaylist(playlistId, songId);
-      res.status(200).json({ message: 'Xóa bài hát thành công!', playlist: updatedPlaylist });
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  };
-  const getUserPlaylists = async (req, res) => {
-    try {
-      const userId = req.user._id; // Lấy ID từ user đã được xác thực
-      const playlists = await playListService.getUserPlaylists(userId);
-      res.status(200).json(playlists);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
-  
-  module.exports = {
-    createPlayList,
-    getById,
-    addSong,
-    removeSong,
-    getUserPlaylists,
-  };
+
+const triggerPopularToday = async (req, res) => {
+  try {
+    // Có thể bổ sung check admin ở đây hoặc ở router middleware
+    const popular = await PlayListService.createPopularToday(req.user.id);
+    res.status(200).json({ message: 'Đã cập nhật Popular Today!', playlist: popular });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  createUserPlaylist,
+  createAlbum,
+  updatePlayList,
+  deletePlayList,
+  addSong,
+  removeSong,
+  getUserPlaylists,
+  getAllAlbums,
+  getById,
+  triggerPopularToday,
+};

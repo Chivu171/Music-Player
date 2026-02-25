@@ -1,59 +1,155 @@
-const PlayList = require('../models/PlayListModel')
+const PlayList = require('../models/PlayListModel');
+const Song = require('../models/SongModel');
+const User = require('../models/User');
 
-const Song = require('../models/SongModel'); // Cần để kiểm tra bài hát tồn tại
+
+const createUserPlaylist = async (playListData, userID) => {
+  const newPlayList = new PlayList({
+    ...playListData,
+    type: 'user-playlist',
+    createdBy: userID,
+  });
+  return await newPlayList.save();
+};
 
 
-const createPlayList = async(playListData, userID) =>{
-    const newPlayList = new PlayList({
-        ...playListData,
-        createdBy: userID, // Gán ID của người dùng đang đăng nhập
-    })
-    return await newPlayList.save();
-}
+const createAlbum = async (albumData, adminID) => {
+  const admin = await User.findById(adminID);
+  if (!admin || admin.role !== 'admin') {
+    throw new Error('Chỉ Admin mới có quyền tạo Album.');
+  }
+  const newAlbum = new PlayList({
+    ...albumData,
+    type: 'album',
+    createdBy: adminID,
+  });
+  return await newAlbum.save();
+};
 
-const getPlayListByID = async(playListID) =>{
-    // .populate() sẽ lấy toàn bộ thông tin chi tiết của bài hát thay vì chỉ ID
-    const playList = await PlayList.findById(playListID).populate('songs');
-    if (!playList){
-        throw new Error('playList not found!');
-    }
-    return playList;
 
-}
+const createPopularToday = async (systemAdminID) => {
+  // Lấy top 10 bài hát có lượt nghe trong ngày cao nhất
+  const topSongs = await Song.find().sort({ dailyListen: -1 }).limit(10);
+  const songIds = topSongs.map(song => song._id);
 
-const addSongToPlayList = async(playlistId, songId)=>{
-    const playlist = await PlayList.findById(playlistId);
+  let popularToday = await PlayList.findOne({ type: 'popular-today' });
+
+  if (popularToday) {
+    popularToday.songs = songIds;
+    popularToday.name = `Popular Today - ${new Date().toLocaleDateString('vi-VN')}`;
+    return await popularToday.save();
+  } else {
+    const newPopular = new PlayList({
+      name: `Popular Today - ${new Date().toLocaleDateString('vi-VN')}`,
+      type: 'popular-today',
+      songs: songIds,
+      createdBy: systemAdminID,
+      description: 'Những bài hát thịnh hành nhất hôm nay.'
+    });
+    return await newPopular.save();
+  }
+};
+
+
+/*const createRecommendation = async (userID, songIds) => {
+  let recommendation = await PlayList.findOne({ createdBy: userID, type: 'recommendation' });
+
+  if (recommendation) {
+    recommendation.songs = songIds;
+    return await recommendation.save();
+  } else {
+    const newRec = new PlayList({
+      name: 'Gợi ý cho bạn',
+      type: 'recommendation',
+      createdBy: userID,
+      songs: songIds,
+      description: 'Danh sách bài hát được gợi ý riêng cho bạn dựa trên gu âm nhạc.'
+    });
+    return await newRec.save();
+  }
+};*/
+
+const getPlayListByID = async (playListID) => {
+  const playList = await PlayList.findById(playListID).populate('songs');
+  if (!playList) {
+    throw new Error('Không tìm thấy Playlist!');
+  }
+  return playList;
+};
+const updatePlayList = async (playlistId, updateData, userID) => {
+  const playlist = await PlayList.findById(playlistId);
+  if (!playlist) throw new Error('Không tìm thấy Playlist.');
+
+  // Kiểm tra chính chủ
+  if (playlist.createdBy.toString() !== userID.toString()) {
+    throw new Error('Bạn không có quyền chỉnh sửa Playlist này.');
+  }
+  return await PlayList.findByIdAndUpdate(playlistId, updateData, { new: true });
+};
+const deletePlayList = async (playlistId, userID) => {
+  const playlist = await PlayList.findById(playlistId);
+  if (!playlist) throw new Error('Không tìm thấy Playlist.');
+  if (playlist.createdBy.toString() !== userID.toString()) {
+    throw new Error('Bạn không có quyền xóa Playlist này.');
+  }
+  return await PlayList.findByIdAndDelete(playlistId);
+};
+//cho trang kham pha
+const getAllAlbums = async () => {
+  return await PlayList.find({ type: 'album' });
+};
+
+const addSongToPlayList = async (playlistId, songId, userID) => {
+  const playlist = await PlayList.findById(playlistId);
   if (!playlist) {
-    throw new Error('playList not found!');
+    throw new Error('Không tìm thấy Playlist!');
   }
+
+  // Kiểm tra quyền sở hữu
+  if (playlist.createdBy.toString() !== userID.toString()) {
+    throw new Error('Bạn không có quyền thêm nhạc vào Playlist này.');
+  }
+
   const song = await Song.findById(songId);
-  if (!song){
-    throw new Error('Song not found!');
+  if (!song) {
+    throw new Error('Không tìm thấy bài hát!');
   }
-  if (playlist.songs.includes(songId)){
-    throw new Error('Song already in playlist');
+  if (playlist.songs.includes(songId)) {
+    throw new Error('Bài hát đã tồn tại trong Playlist.');
   }
   playlist.songs.push(songId);
   return await playlist.save();
+};
 
-}
-const removeSongFromPlaylist = async (playlistId, songId) => {
-    const playlist = await PlayList.findById(playlistId);
-    if (!playlist) {
-      throw new Error('Không tìm thấy playlist.');
-    }
-    // Kéo (pull) bài hát ra khỏi mảng songs
-    playlist.songs.pull(songId);
-    return await playlist.save();
-  };
-  const getUserPlaylist = async (userID)=>{
-    const playlists = await PlayList.find({ createdBy: userID });
-    return playlists;
+const removeSongFromPlaylist = async (playlistId, songId, userID) => {
+  const playlist = await PlayList.findById(playlistId);
+  if (!playlist) {
+    throw new Error('Không tìm thấy Playlist.');
   }
-  module.exports = {
-    createPlayList,
-    getPlayListByID,
-    addSongToPlayList,
-    removeSongFromPlaylist,
-    getUserPlaylist,
-  };
+
+  // Kiểm tra quyền sở hữu
+  if (playlist.createdBy.toString() !== userID.toString()) {
+    throw new Error('Bạn không có quyền xóa nhạc khỏi Playlist này.');
+  }
+
+  playlist.songs.pull(songId);
+  return await playlist.save();
+};
+
+const getUserPlaylist = async (userID) => {
+  const playlists = await PlayList.find({ createdBy: userID, type: 'user-playlist' });
+  return playlists;
+};
+
+module.exports = {
+  createUserPlaylist,
+  createAlbum,
+  createPopularToday,
+  getPlayListByID,
+  addSongToPlayList,
+  removeSongFromPlaylist,
+  getUserPlaylist,
+  updatePlayList,
+  deletePlayList,
+  getAllAlbums
+};

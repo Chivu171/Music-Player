@@ -7,6 +7,9 @@ const fs = require("fs"); // Nhớ require thêm thư viện fs của nodejs
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 const Song = require("../models/SongModel");
+const isAuthenticated = require("../middleware/isAuthenticated");
+const isAdmin = require("../middleware/isAdmin");
+
 // cấu hình cloudinary từ ENV
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
@@ -14,7 +17,7 @@ cloudinary.config({
     api_secret: process.env.CLOUD_API_SECRET,
 });
 
-router.post("/", upload.single("file"), async (req, res) => {
+router.post("/", isAuthenticated, isAdmin, upload.single("file"), async (req, res) => {
     console.log("File nhận được:", req.file);
     if (!req.file) {
         return res.status(400).json({ error: "Vui lòng chọn file nhạc!" });
@@ -27,7 +30,7 @@ router.post("/", upload.single("file"), async (req, res) => {
         fs.unlinkSync(req.file.path);
         const { title, artist } = req.body;
         const newSong = await Song.create({
-            title: title || req.file.originalname, // Nếu ko nhập title thì lấy tên file gốc
+            title: title || req.file.originalname,
             artist: artist || "Unknown Artist",
             fileUrl: result.secure_url,            // Link từ Cloudinary
             duration: result.duration              // Độ dài từ Cloudinary

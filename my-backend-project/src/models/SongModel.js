@@ -5,6 +5,8 @@ const songSchema = new mongoose.Schema({
     artist: { type: String, required: true },
     fileUrl: { type: String, required: true },
     duration: { type: Number, required: true },
+    dailyListen: { type: Number, default: 0 },
+    totalListen: { type: Number, default: 0 },
 })
 
 const Song = mongoose.model('Song', songSchema)
