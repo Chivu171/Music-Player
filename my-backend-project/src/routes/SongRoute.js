@@ -12,4 +12,10 @@ router.get('/search', songController.searchSongs);
 // GET /api/songs/:id
 router.get('/:id', songController.getDetailSongs);
 
+// POST /api/songs/listen/:id
+router.post('/listen/:id', songController.incrementListenCount);
+
+// GET /api/songs/popular
+router.get('/popular', songController.getPopularSongs);
+
 module.exports = router;

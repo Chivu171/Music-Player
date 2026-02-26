@@ -1,4 +1,7 @@
 const UserService = require('../services/UserService')
+const { cloudinary } = require('../middleware/uploadMiddleware');
+const streamifier = require('streamifier');
+
 
 
 const register = async (req, res) => {
@@ -21,11 +24,24 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Please fill in the form completely' })
         }
         const result = await UserService.loginUser({ email, password });
-        res.status(200).json({ message: 'Succefully login', user: result })
+        res.status(200).json({ message: 'Login successful', ...result })
 
     }
     catch (error) {
         return res.status(400).json({ message: error.message });
+    }
+}
+
+const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token is required' });
+        }
+        const newAccessToken = await UserService.refreshAccessToken(refreshToken);
+        res.status(200).json({ accessToken: newAccessToken });
+    } catch (error) {
+        res.status(401).json({ message: error.message });
     }
 }
 const getMe = async (req, res) => {
@@ -73,4 +89,89 @@ const updateProfile = async (req, res) => {
     }
 }
 
-module.exports = { register, login, getMe, changePassword, updateProfile }
+const likeSong = async (req, res) => {
+    try {
+        const songId = req.params.songId;
+        const user = await UserService.likeSong(req.user.id, songId);
+        res.status(200).json({ message: 'Song liked', user });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const unlikeSong = async (req, res) => {
+    try {
+        const songId = req.params.songId;
+        const user = await UserService.unlikeSong(req.user.id, songId);
+        res.status(200).json({ message: 'Song unliked', user });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const getLikedSongs = async (req, res) => {
+    try {
+        const songs = await UserService.getLikedSongs(req.user.id);
+        res.status(200).json(songs);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const addToHistory = async (req, res) => {
+    try {
+        const songId = req.params.songId;
+        const user = await UserService.addToHistory(req.user.id, songId);
+        res.status(200).json({ message: 'Added to history', user });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const getHistory = async (req, res) => {
+    try {
+        const history = await UserService.getHistory(req.user.id);
+        res.status(200).json(history);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const uploadAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Please upload an image' });
+        }
+
+        // Tạo hàm upload stream lên Cloudinary
+        let streamUpload = (req) => {
+            return new Promise((resolve, reject) => {
+                let stream = cloudinary.uploader.upload_stream(
+                    { folder: "music-player-avatars" },
+                    (error, result) => {
+                        if (result) {
+                            resolve(result);
+                        } else {
+                            reject(error);
+                        }
+                    }
+                );
+                streamifier.createReadStream(req.file.buffer).pipe(stream);
+            });
+        };
+
+        const result = await streamUpload(req);
+
+        // Cập nhật URL avatar vào profile user
+        const updatedUser = await UserService.updateProfile(req.user.id, { avatar: result.secure_url });
+
+        res.status(200).json({
+            message: 'Avatar uploaded successfully',
+            user: updatedUser
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { register, login, refreshToken, getMe, changePassword, updateProfile, likeSong, unlikeSong, getLikedSongs, addToHistory, getHistory, uploadAvatar }

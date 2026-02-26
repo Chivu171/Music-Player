@@ -33,13 +33,46 @@ const loginUser = async (loginData) => {
     if (!isPasswordMatched) {
         throw new Error('Email or password is incorrect')
     }
-    const token = jwt.sign(
+
+    const accessToken = jwt.sign(
         { id: user._id },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' } // Token hết hạn sau 1 giờ
+        { expiresIn: '15m' } // Access token ngắn (15 phút)
     );
-    user.password = undefined; // Bỏ mật khẩu khỏi đối tượng trả về
-    return { user, token };
+
+    const refreshToken = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET, // Trong thực tế nên dùng SECRET riêng
+        { expiresIn: '7d' } // Refresh token dài (7 ngày)
+    );
+
+    // Lưu refresh token vào DB
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
+    user.password = undefined;
+    return { user, accessToken, refreshToken };
+}
+
+const refreshAccessToken = async (refreshToken) => {
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user || !user.refreshTokens.includes(refreshToken)) {
+            throw new Error('Invalid refresh token');
+        }
+
+        const newAccessToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        return newAccessToken;
+    } catch (error) {
+        throw new Error('Refresh token expired or invalid');
+    }
 }
 const getMe = async (userId) => {
     const user = await User.findById(userId).select('-password');
@@ -85,4 +118,64 @@ const updateProfile = async (userId, updateData) => {
 
     return user;
 };
-module.exports = { registerUser, loginUser, getMe, changePassword, updateProfile }
+const likeSong = async (userId, songId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    if (user.likedSongs.includes(songId)) {
+        throw new Error('Song already liked');
+    }
+
+    user.likedSongs.push(songId);
+    await user.save();
+    return user;
+};
+
+const unlikeSong = async (userId, songId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    user.likedSongs = user.likedSongs.filter(id => id.toString() !== songId);
+    await user.save();
+    return user;
+};
+
+const getLikedSongs = async (userId) => {
+    const user = await User.findById(userId).populate('likedSongs');
+    if (!user) throw new Error('User not found');
+    return user.likedSongs;
+};
+
+const addToHistory = async (userId, songId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    // Giữ lại 50 bài hát gần nhất trong lịch sử
+    user.listenHistory.unshift({ song: songId, listenedAt: new Date() });
+    if (user.listenHistory.length > 50) {
+        user.listenHistory.pop();
+    }
+
+    await user.save();
+    return user;
+};
+
+const getHistory = async (userId) => {
+    const user = await User.findById(userId).populate('listenHistory.song');
+    if (!user) throw new Error('User not found');
+    return user.listenHistory;
+};
+
+module.exports = {
+    registerUser,
+    loginUser,
+    getMe,
+    changePassword,
+    updateProfile,
+    likeSong,
+    unlikeSong,
+    getLikedSongs,
+    addToHistory,
+    getHistory,
+    refreshAccessToken
+};

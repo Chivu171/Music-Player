@@ -1,34 +1,22 @@
 const StreamService = require('../services/StreamService');
-const fs = require('fs');
-const path = require('path');
 
-
-const streamSong = async(req,res)=>{
-    try{
+const streamSong = async (req, res) => {
+  try {
     const songID = req.params.id;
 
-    const relativePath = await StreamService.getSongPathById(songID);
-    const absolutePath = path.join(__dirname, '../../', relativePath);
+    // Lấy URL bài hát từ Service (nó trả về result.secure_url từ Cloudinary)
+    const fileUrl = await StreamService.getSongPathById(songID);
 
-    if(!fs.existsSync(absolutePath)){
-        return res.status(404).send('Song not found');
-    
+    if (!fileUrl) {
+      return res.status(404).send('Song URL not found');
     }
-    const stat = fs.statSync(absolutePath);
-    const fileSize = stat.size;
-    const head = {
-        'Content-Length': fileSize,
-        'Content-Type': 'audio/mpeg',
-      };
-      
-    res.writeHead(200, head);
 
-    const fileStream = fs.createReadStream(absolutePath);
-    fileStream.pipe(res);
-    }
-    catch (error) {
-        res.status(404).json({ message: error.message });
-      }
+    // Chuyển hướng trình duyệt/ứng dụng sang link Cloudinary
+    // Cloudinary sẽ tự động xử lý việc Stream dữ liệu và cho phép tua nhạc (Seek)
+    res.redirect(fileUrl);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
 
-}
-module.exports = {streamSong};
+module.exports = { streamSong };

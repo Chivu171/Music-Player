@@ -16,6 +16,7 @@ router.post('/add-song', playListController.addSong);
 router.post('/remove-song', playListController.removeSong);
 
 router.get('/albums', playListController.getAllAlbums);
+router.get('/shuffle/:id', playListController.shuffle);
 router.get('/:id', playListController.getById);
 
 router.post('/admin/create-album', isAdmin, playListController.createAlbum);

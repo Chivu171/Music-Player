@@ -141,6 +141,21 @@ const getUserPlaylist = async (userID) => {
   return playlists;
 };
 
+const shuffleSongs = async (playlistId) => {
+  const playlist = await PlayList.findById(playlistId).populate('songs');
+  if (!playlist) {
+    throw new Error('Không tìm thấy Playlist!');
+  }
+
+  // Fisher-Yates shuffle algorithm for better randomness
+  const songs = [...playlist.songs];
+  for (let i = songs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [songs[i], songs[j]] = [songs[j], songs[i]];
+  }
+  return songs;
+};
+
 module.exports = {
   createUserPlaylist,
   createAlbum,
@@ -151,5 +166,6 @@ module.exports = {
   getUserPlaylist,
   updatePlayList,
   deletePlayList,
-  getAllAlbums
+  getAllAlbums,
+  shuffleSongs
 };

@@ -13,6 +13,9 @@ const songRoute = require('./src/routes/SongRoute');
 const userRoute = require('./src/routes/UserRoute');
 const streamRoute = require('./src/routes/StreamRoute');
 const playlistRoute = require('./src/routes/PlayListRoute');
+const artistRoute = require('./src/routes/ArtistRoute');
+const genresRoute = require('./src/routes/GenreRoute');
+const uploadRoute = require("./src/routes/upload");
 const cors = require('cors'); // <-- 1. IMPORT THƯ VIỆN
 
 
@@ -31,9 +34,11 @@ app.use('/api/songs', songRoute);
 app.use('/api/auth', userRoute);
 app.use('/api/stream', streamRoute);
 app.use('/api/playlists', playlistRoute);
-app.use("/upload", require("./src/routes/upload"));
+app.use('/api/artists', artistRoute);
+app.use('/api/genres', genresRoute);
+app.use("/upload", uploadRoute);
 
 // Khởi động server
 app.listen(port, () => {
-  console.log(`🚀 Server đang lắng nghe tại http://localhost:${port}`);
+  console.log(`Server đang lắng nghe tại http://localhost:${port}`);
 });

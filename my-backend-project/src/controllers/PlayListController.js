@@ -105,6 +105,15 @@ const triggerPopularToday = async (req, res) => {
   }
 };
 
+const shuffle = async (req, res) => {
+  try {
+    const songs = await PlayListService.shuffleSongs(req.params.id);
+    res.status(200).json(songs);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createUserPlaylist,
   createAlbum,
@@ -116,4 +125,5 @@ module.exports = {
   getAllAlbums,
   getById,
   triggerPopularToday,
+  shuffle,
 };

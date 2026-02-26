@@ -10,7 +10,12 @@ const userSchema = new mongoose.Schema({
     likedSongs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Song'
-    }]
+    }],
+    listenHistory: [{
+        song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
+        listenedAt: { type: Date, default: Date.now }
+    }],
+    refreshTokens: [String]
 }, { timestamps: true }) // timestamps tự động thêm createdAt và updatedAt
 
 const User = mongoose.model('User', userSchema)
