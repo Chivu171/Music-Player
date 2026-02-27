@@ -9,6 +9,11 @@ require('./src/config/database');
 // Khởi tạo ứng dụng web
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Swagger documentation
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./src/config/swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 const songRoute = require('./src/routes/SongRoute');
 const userRoute = require('./src/routes/UserRoute');
 const streamRoute = require('./src/routes/StreamRoute');

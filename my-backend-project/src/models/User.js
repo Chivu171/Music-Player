@@ -1,5 +1,26 @@
 const mongoose = require('mongoose')
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - username
+ *         - email
+ *         - password
+ *       properties:
+ *         username:
+ *           type: string
+ *         email:
+ *           type: string
+ *         fullName:
+ *           type: string
+ *         role:
+ *           type: string
+ *           enum: [user, admin]
+ */
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },

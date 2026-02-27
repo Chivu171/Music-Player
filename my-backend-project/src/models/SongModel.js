@@ -1,13 +1,46 @@
 const mongoose = require('mongoose');
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Song:
+ *       type: object
+ *       required:
+ *         - title
+ *         - artist
+ *         - fileUrl
+ *         - duration
+ *       properties:
+ *         title:
+ *           type: string
+ *         artist:
+ *           type: string
+ *           description: Artist ID (ObjectId)
+ *         genre:
+ *           type: string
+ *           description: Genre ID (ObjectId)
+ *         fileUrl:
+ *           type: string
+ *         cloudinaryId:
+ *           type: string
+ *         duration:
+ *           type: number
+ *         dailyListen:
+ *           type: number
+ *         totalListen:
+ *           type: number
+ */
 const songSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    artist: { type: String, required: true },
+    artist: { type: mongoose.Schema.Types.ObjectId, ref: 'Artist', required: true },
+    genre: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre' },
     fileUrl: { type: String, required: true },
+    cloudinaryId: { type: String, required: true },
     duration: { type: Number, required: true },
     dailyListen: { type: Number, default: 0 },
     totalListen: { type: Number, default: 0 },
-})
+}, { timestamps: true })
 
 const Song = mongoose.model('Song', songSchema)
 

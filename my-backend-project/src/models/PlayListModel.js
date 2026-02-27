@@ -1,5 +1,37 @@
 const mongoose = require('mongoose');
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     PlayList:
+ *       type: object
+ *       required:
+ *         - name
+ *         - createdBy
+ *       properties:
+ *         name:
+ *           type: string
+ *         description:
+ *           type: string
+ *         thumbnail:
+ *           type: string
+ *         type:
+ *           type: string
+ *           enum: [album, user-playlist, popular-today, recommendation]
+ *         createdBy:
+ *           type: string
+ *           description: User ID (ObjectId)
+ *         artistName:
+ *           type: string
+ *         songs:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: Song ID (ObjectId)
+ *         isPublic:
+ *           type: boolean
+ */
 const playListSchema = new mongoose.Schema({
   name: {
     type: String,

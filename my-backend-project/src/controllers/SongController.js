@@ -55,11 +55,32 @@ const searchSongs = async (req, res) => {
 const getDetailSongs = async (req, res) => {
     try {
         const songId = req.params.id;
-        const song = await SongService.getDetailSongs(songId);
-        res.status(200).json(song);
+        const detail = await SongService.getDetailSongs(songId);
+        res.status(200).json(detail);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+const deleteSong = async (req, res) => {
+    try {
+        const songId = req.params.id;
+        const result = await SongService.deleteSong(songId);
+        res.status(200).json(result);
     } catch (error) {
-        res.status(404).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
+const searchSongsByGenre = async (req, res) => {
+    try {
+        const genreName = req.params.id;
+        const songs = await SongService.searchSongsByGenre(genreName);
+        res.status(200).json(songs);
 
-module.exports = { getSongPathById, getAllSongs, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs };
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+module.exports = { getSongPathById, getAllSongs, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, deleteSong };

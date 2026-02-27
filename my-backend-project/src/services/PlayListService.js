@@ -147,7 +147,6 @@ const shuffleSongs = async (playlistId) => {
     throw new Error('Không tìm thấy Playlist!');
   }
 
-  // Fisher-Yates shuffle algorithm for better randomness
   const songs = [...playlist.songs];
   for (let i = songs.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

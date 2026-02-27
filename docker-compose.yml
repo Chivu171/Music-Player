@@ -18,6 +18,7 @@ services:
       - "8000:8000"
     environment:
       NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT_ENV}
       DB_URI: ${DB_URI}
       CLOUD_NAME: ${CLOUD_NAME}
       CLOUD_API_KEY: ${CLOUD_API_KEY}

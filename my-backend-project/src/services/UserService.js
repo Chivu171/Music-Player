@@ -7,10 +7,8 @@ const registerUser = async (userData) => {
     if (existingUser) {
         throw new Error('Email has been used!')
     }
-    // 2. Mã hóa mật khẩu
     const hashedPW = await bcrypt.hash(userData.password, 10)
 
-    // 3. Tạo người dùng mới với mật khẩu đã được mã hóa
     const newUser = new User({
         username: userData.username,
         email: userData.email,
@@ -19,7 +17,6 @@ const registerUser = async (userData) => {
     //Luu nguoi dung moi vao
     const savedUser = await newUser.save();
 
-    // 5. Trả về dữ liệu người dùng (không bao gồm mật khẩu)
     savedUser.password = undefined;
     return savedUser;
 
@@ -42,7 +39,7 @@ const loginUser = async (loginData) => {
 
     const refreshToken = jwt.sign(
         { id: user._id },
-        process.env.JWT_SECRET, // Trong thực tế nên dùng SECRET riêng
+        process.env.JWT_SECRET,
         { expiresIn: '7d' } // Refresh token dài (7 ngày)
     );
 
