@@ -4,4 +4,10 @@ my-backend-project/.env
 my-backend-project/package-lock.json
 /my-fe-prj/node_modules
 my-fe-prj/package-lock.json
+/my-fe-prj/dist
+/my-fe-prj/.env
+/my-fe-prj/.env.*.local
+/my-fe-prj/npm-debug.log*
+/my-fe-prj/yarn-debug.log*
+/my-fe-prj/yarn-error.log*
 /my-fe-prj/public
