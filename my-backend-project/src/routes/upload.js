@@ -36,6 +36,10 @@ const Song = require("../models/SongModel");
  *                 type: string
  *                 format: binary
  *                 description: File nhạc cần upload
+ *               cover:
+ *                 type: string
+ *                 format: binary
+ *                 description: File ảnh bìa bài hát (tùy chọn)
  *               title:
  *                 type: string
  *               artistId:
@@ -46,39 +50,44 @@ const Song = require("../models/SongModel");
  *       201:
  *         description: Tải lên và lưu bài hát thành công
  */
-router.post("/", isAuthenticated, isAdmin, upload.single("file"), async (req, res) => {
-    // ... (existing implementation)
+router.post("/", isAuthenticated, isAdmin, upload.fields([
+    { name: 'file', maxCount: 1 },
+    { name: 'cover', maxCount: 1 }
+]), async (req, res) => {
+    const songFile = req.files['file'] ? req.files['file'][0] : null;
+    const coverFile = req.files['cover'] ? req.files['cover'][0] : null;
 
-    console.log("File nhận được:", req.file);
-    if (!req.file) {
+    if (!songFile) {
         return res.status(400).json({ error: "Vui lòng chọn file nhạc!" });
     }
     try {
-        const result = await cloudinary.uploader.upload(req.file.path, {
+        // Upload audio file
+        const audioResult = await cloudinary.uploader.upload(songFile.path, {
             resource_type: "auto",
         });
-        // Lưu vào DB xong thì xóa file tạm
-        fs.unlinkSync(req.file.path);
+        fs.unlinkSync(songFile.path);
+
+        // Upload cover image (if provided)
+        let coverUrl = 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png';
+        if (coverFile) {
+            const coverResult = await cloudinary.uploader.upload(coverFile.path, {
+                resource_type: "image",
+            });
+            coverUrl = coverResult.secure_url;
+            fs.unlinkSync(coverFile.path);
+        }
 
         const { title, artistId, genreId } = req.body;
 
-        // Tạo bài hát mới (artist là ObjectId bắt buộc)
         const newSong = await Song.create({
-            title: title || req.file.originalname,
+            title: title || songFile.originalname,
             artist: artistId,
             genre: genreId,
-            fileUrl: result.secure_url,
-            cloudinaryId: result.public_id,
-            duration: result.duration
+            fileUrl: audioResult.secure_url,
+            coverUrl: coverUrl,
+            cloudinaryId: audioResult.public_id,
+            duration: audioResult.duration
         });
-
-        // Đồng bộ xuôi: Thêm bài hát vào mảng songs của Artist và Genre
-        if (artistId) {
-            await Artist.findByIdAndUpdate(artistId, { $push: { songs: newSong._id } });
-        }
-        if (genreId) {
-            await Genre.findByIdAndUpdate(genreId, { $push: { songs: newSong._id } });
-        }
 
         res.status(201).json(newSong);
     } catch (err) {

@@ -92,10 +92,6 @@ const deleteSong = async (songId) => {
     }
   }
 
-  //Xóa tham chiếu trong Artist và Genre
-  await Artist.updateMany({ songs: songId }, { $pull: { songs: songId } });
-  await Genre.updateMany({ songs: songId }, { $pull: { songs: songId } });
-
   //Xóa trong DB
   await Song.findByIdAndDelete(songId);
 

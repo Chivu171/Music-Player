@@ -1,11 +1,11 @@
 const Artist = require('../models/Artist');
 
 const getAllArtists = async () => {
-    return await Artist.find().populate('songs');
+    return await Artist.find();
 };
 
 const getArtistById = async (id) => {
-    const artist = await Artist.findById(id).populate('songs');
+    const artist = await Artist.findById(id);
     if (!artist) throw new Error('Artist not found');
     return artist;
 };

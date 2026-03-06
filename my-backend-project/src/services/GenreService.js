@@ -1,11 +1,11 @@
 const Genre = require('../models/Genre');
 
 const getAllGenres = async () => {
-    return await Genre.find().populate('songs');
+    return await Genre.find();
 };
 
 const getGenreById = async (id) => {
-    const genre = await Genre.findById(id).populate('songs');
+    const genre = await Genre.findById(id);
     if (!genre) throw new Error('Genre not found');
     return genre;
 };

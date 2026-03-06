@@ -11,3 +11,4 @@ my-fe-prj/package-lock.json
 /my-fe-prj/yarn-debug.log*
 /my-fe-prj/yarn-error.log*
 /my-fe-prj/public
+/my-backend-project/uploads

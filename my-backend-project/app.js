@@ -8,7 +8,7 @@ require('./src/config/database');
 
 // Khởi tạo ứng dụng web
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 
 // Swagger documentation
 const swaggerUi = require('swagger-ui-express');
@@ -41,7 +41,7 @@ app.use('/api/stream', streamRoute);
 app.use('/api/playlists', playlistRoute);
 app.use('/api/artists', artistRoute);
 app.use('/api/genres', genresRoute);
-app.use("/upload", uploadRoute);
+app.use("/api/upload", uploadRoute);
 
 // Khởi động server
 app.listen(port, () => {

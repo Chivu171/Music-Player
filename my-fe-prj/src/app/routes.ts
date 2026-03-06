@@ -7,6 +7,7 @@ import { Albums } from "@/app/pages/Albums";
 import { Artists } from "@/app/pages/Artists";
 import { Login } from "@/app/pages/Login";
 import { Register } from "@/app/pages/Register";
+import { Admin } from "@/app/pages/Admin";
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
       { path: "recommended", Component: Recommended },
       { path: "albums", Component: Albums },
       { path: "artists", Component: Artists },
+      { path: "admin", Component: Admin },
     ],
   },
   {

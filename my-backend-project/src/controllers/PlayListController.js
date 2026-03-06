@@ -77,7 +77,8 @@ const getUserPlaylists = async (req, res) => {
 
 const getAllAlbums = async (req, res) => {
   try {
-    const albums = await PlayListService.getAllAlbums();
+    const { artistName } = req.query;
+    const albums = await PlayListService.getAllAlbums(artistName);
     res.status(200).json(albums);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -16,41 +16,70 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (currentSong) {
-      const [minutes, seconds] = currentSong.duration.split(":").map(Number);
-      setDuration(minutes * 60 + seconds);
+    if (audioRef.current && currentSong?.audioUrl) {
+      audioRef.current.src = currentSong.audioUrl;
+      if (isPlaying) {
+        audioRef.current.play().catch(err => console.error("Playback error:", err));
+      }
     }
   }, [currentSong]);
 
   useEffect(() => {
-    let interval: number;
-    if (isPlaying && currentSong) {
-      interval = window.setInterval(() => {
-        setCurrentTime((prev) => {
-          if (prev >= duration) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch(err => console.error("Playback error:", err));
+      } else {
+        audioRef.current.pause();
+      }
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentSong, duration]);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume / 100;
+    }
+  }, [volume, isMuted]);
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    if (isRepeat && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+      setIsPlaying(true);
+    } else {
+      onNext();
+    }
+  };
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (progressRef.current) {
+    if (progressRef.current && audioRef.current) {
       const rect = progressRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const percentage = x / rect.width;
-      setCurrentTime(percentage * duration);
+      const newTime = percentage * duration;
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
     }
   };
 
@@ -90,9 +119,8 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
         <div className="flex items-center justify-center gap-4 mb-2">
           <button
             onClick={() => setIsShuffle(!isShuffle)}
-            className={`p-2 rounded-full transition-colors ${
-              isShuffle ? "text-green-500" : "text-zinc-400 hover:text-white"
-            }`}
+            className={`p-2 rounded-full transition-colors ${isShuffle ? "text-green-500" : "text-zinc-400 hover:text-white"
+              }`}
           >
             <Shuffle size={18} />
           </button>
@@ -116,9 +144,8 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           </button>
           <button
             onClick={() => setIsRepeat(!isRepeat)}
-            className={`p-2 rounded-full transition-colors ${
-              isRepeat ? "text-green-500" : "text-zinc-400 hover:text-white"
-            }`}
+            className={`p-2 rounded-full transition-colors ${isRepeat ? "text-green-500" : "text-zinc-400 hover:text-white"
+              }`}
           >
             <Repeat size={18} />
           </button>
@@ -159,6 +186,13 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           className="w-24 h-1 bg-zinc-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
         />
       </div>
+
+      <audio
+        ref={audioRef}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+      />
     </div>
   );
 }

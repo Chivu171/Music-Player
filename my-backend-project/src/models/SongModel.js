@@ -22,6 +22,8 @@ const mongoose = require('mongoose');
  *           description: Genre ID (ObjectId)
  *         fileUrl:
  *           type: string
+ *         coverUrl:
+ *           type: string
  *         cloudinaryId:
  *           type: string
  *         duration:
@@ -36,6 +38,7 @@ const songSchema = new mongoose.Schema({
     artist: { type: mongoose.Schema.Types.ObjectId, ref: 'Artist', required: true },
     genre: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre' },
     fileUrl: { type: String, required: true },
+    coverUrl: { type: String, default: 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png' },
     cloudinaryId: { type: String, required: true },
     duration: { type: Number, required: true },
     dailyListen: { type: Number, default: 0 },

@@ -34,7 +34,12 @@ export function Login() {
             localStorage.setItem("token", data.accessToken);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            navigate("/");
+            // Navigate based on role
+            if (data.user.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/");
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
