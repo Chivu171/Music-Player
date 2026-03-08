@@ -19,8 +19,13 @@ export function Sidebar() {
 
   return (
     <aside className="w-56 bg-zinc-950 h-full flex flex-col border-r border-zinc-800">
-      <div className="p-6">
-        <h1 className="text-2xl text-white">MusicFlow</h1>
+      <div className="p-6 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-purple-500/20 border border-white/10">
+          <img src="/logo.jpg" alt="MusicFlow Logo" className="w-full h-full object-cover" />
+        </div>
+        <h1 className="text-xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent tracking-tight">
+          MusicFlow
+        </h1>
       </div>
 
       <nav className="flex-1 px-3">

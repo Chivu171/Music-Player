@@ -1,4 +1,4 @@
-const StreamService = require('../services/StreamService');
+const StreamService = require('./stream.service');
 
 const streamSong = async (req, res) => {
   try {

@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 
 // Tự động kết nối đến database khi server khởi động
-require('./src/config/database');
+require('./src/infrastructure/config/database');
 
 // Khởi tạo ứng dụng web
 const app = express();
@@ -12,15 +12,16 @@ const port = process.env.PORT || 8000;
 
 // Swagger documentation
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpecs = require('./src/config/swagger');
+const swaggerSpecs = require('./src/infrastructure/config/swagger');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
-const songRoute = require('./src/routes/SongRoute');
-const userRoute = require('./src/routes/UserRoute');
-const streamRoute = require('./src/routes/StreamRoute');
-const playlistRoute = require('./src/routes/PlayListRoute');
-const artistRoute = require('./src/routes/ArtistRoute');
-const genresRoute = require('./src/routes/GenreRoute');
-const uploadRoute = require("./src/routes/upload");
+
+const songRoute = require('./src/domains/song/song.routes');
+const userRoute = require('./src/domains/auth/auth.routes');
+const streamRoute = require('./src/domains/song/stream.routes');
+const playlistRoute = require('./src/domains/playlist/playlist.routes');
+const artistRoute = require('./src/domains/artist/artist.routes');
+const genresRoute = require('./src/domains/genre/genre.routes');
+const uploadRoute = require("./src/domains/song/upload.routes");
 const cors = require('cors'); // <-- 1. IMPORT THƯ VIỆN
 
 

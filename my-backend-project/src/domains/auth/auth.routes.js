@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/UserController');
-const isAuthenticated = require('../middleware/isAuthenticated');
-const isAdmin = require('../middleware/isAdmin')
-const { uploadAvatar } = require('../middleware/uploadMiddleware');
+const userController = require('./auth.controller');
+const isAuthenticated = require('../../infrastructure/middleware/isAuthenticated');
+const isAdmin = require('../../infrastructure/middleware/isAdmin')
+const { uploadAvatar } = require('../../infrastructure/middleware/uploadMiddleware');
 
 
 

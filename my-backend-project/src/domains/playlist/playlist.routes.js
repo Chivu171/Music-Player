@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const playListController = require('../controllers/PlayListController');
-const isAuthenticated = require('../middleware/isAuthenticated');
-const isAdmin = require('../middleware/isAdmin');
+const playListController = require('./playlist.controller');
+const isAuthenticated = require('../../infrastructure/middleware/isAuthenticated');
+const isAdmin = require('../../infrastructure/middleware/isAdmin');
 
 // Tất cả các route yêu cầu xác thực
 router.use(isAuthenticated);

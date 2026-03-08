@@ -1,6 +1,6 @@
-const PlayList = require('../models/PlayListModel');
-const Song = require('../models/SongModel');
-const User = require('../models/User');
+const PlayList = require('./playlist.model');
+const Song = require('../song/song.model');
+const User = require('../auth/auth.model');
 
 
 const createUserPlaylist = async (playListData, userID) => {

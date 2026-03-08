@@ -1,5 +1,5 @@
-const UserService = require('../services/UserService')
-const { cloudinary } = require('../middleware/uploadMiddleware');
+const UserService = require('./auth.service')
+const { cloudinary } = require('../../infrastructure/middleware/uploadMiddleware');
 const streamifier = require('streamifier');
 
 

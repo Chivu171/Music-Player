@@ -1,4 +1,4 @@
-const ArtistService = require('../services/ArtistService');
+const ArtistService = require('./artist.service');
 
 const getAllArtists = async (req, res) => {
     try {

@@ -1,7 +1,7 @@
-const Song = require('../models/SongModel');
-const Artist = require('../models/Artist');
-const Genre = require('../models/Genre');
-const cloudinary = require('../config/cloudinary');
+const Song = require('./song.model');
+const Artist = require('../artist/artist.model');
+const Genre = require('../genre/genre.model');
+const cloudinary = require('../../infrastructure/config/cloudinary');
 
 const getAllSong = async (page = 1, limit = 10) => {
   const skip = (page - 1) * limit;

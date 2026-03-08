@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const songController = require('../controllers/SongController');
-
-
-const isAuthenticated = require('../middleware/isAuthenticated');
-const isAdmin = require('../middleware/isAdmin');
+const songController = require('./song.controller');
+const isAuthenticated = require('../../infrastructure/middleware/isAuthenticated');
+const isAdmin = require('../../infrastructure/middleware/isAdmin');
 
 
 /**

@@ -1,14 +1,14 @@
 const express = require("express");
 const multer = require("multer");
-const cloudinary = require("../config/cloudinary");
-const Artist = require("../models/Artist");
-const Genre = require("../models/Genre");
-const isAdmin = require('../middleware/isAdmin');
-const isAuthenticated = require('../middleware/isAuthenticated');
+const cloudinary = require("../../infrastructure/config/cloudinary");
+const Artist = require("../artist/artist.model");
+const Genre = require("../genre/genre.model");
+const isAdmin = require('../../infrastructure/middleware/isAdmin');
+const isAuthenticated = require('../../infrastructure/middleware/isAuthenticated');
 const fs = require("fs");
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
-const Song = require("../models/SongModel");
+const Song = require("./song.model");
 
 /**
  * @swagger

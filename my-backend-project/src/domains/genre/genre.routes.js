@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const genreController = require('../controllers/GenreController');
-const isAuthenticated = require('../middleware/isAuthenticated');
-const isAdmin = require('../middleware/isAdmin');
+const genreController = require('./genre.controller');
+const isAuthenticated = require('../../infrastructure/middleware/isAuthenticated');
+const isAdmin = require('../../infrastructure/middleware/isAdmin');
 
 /**
  * @swagger

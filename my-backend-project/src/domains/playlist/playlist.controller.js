@@ -1,8 +1,6 @@
-const PlayListService = require('../services/PlayListService');
+const PlayListService = require('./playlist.service');
 
-/**
- * 1. Tạo Playlist cho người dùng (type: 'user-playlist')
- */
+
 const createUserPlaylist = async (req, res) => {
   try {
     const playlist = await PlayListService.createUserPlaylist(req.body, req.user.id);

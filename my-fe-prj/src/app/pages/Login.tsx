@@ -56,8 +56,8 @@ export function Login() {
             <div className="w-full max-w-md relative z-10">
                 <div className="bg-zinc-900/50 backdrop-blur-2xl border border-white/5 rounded-[32px] p-10 shadow-2xl">
                     <div className="flex flex-col items-center mb-10">
-                        <div className="bg-green-500 p-4 rounded-2xl shadow-xl shadow-green-500/20 mb-6">
-                            <Music2 size={32} className="text-black" />
+                        <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-2xl shadow-green-500/20 mb-8 border border-white/10 ring-4 ring-zinc-900">
+                            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <h1 className="text-4xl text-white font-black tracking-tight mb-2">Welcome Back</h1>
                         <p className="text-zinc-400 font-medium tracking-wide">Continue your musical journey</p>

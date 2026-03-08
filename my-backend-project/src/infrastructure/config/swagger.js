@@ -24,8 +24,8 @@ const options = {
             },
         },
     },
-    // Đường dẫn tới các file chứa annotation (routes, controllers, models)
-    apis: ['./src/routes/*.js', './src/models/*.js'],
+    // Đường dẫn tới các file chứa annotation (domain modules)
+    apis: ['./src/domains/**/*.js'],
 };
 
 const specs = swaggerJsdoc(options);

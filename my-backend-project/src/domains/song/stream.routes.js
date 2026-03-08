@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const streamController = require('../controllers/StreamController');
+const streamController = require('./stream.controller');
 
 /**
  * @swagger
