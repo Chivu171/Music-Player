@@ -42,6 +42,7 @@ const songSchema = new mongoose.Schema({
     cloudinaryId: { type: String, required: true },
     duration: { type: Number, required: true },
     dailyListen: { type: Number, default: 0 },
+    weeklyListen: { type: Number, default: 0 },
     totalListen: { type: Number, default: 0 },
 }, { timestamps: true })
 

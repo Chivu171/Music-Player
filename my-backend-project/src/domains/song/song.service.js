@@ -20,7 +20,7 @@ const getAllSong = async (page = 1, limit = 10) => {
 const incrementListenCount = async (songId) => {
   const song = await Song.findByIdAndUpdate(
     songId,
-    { $inc: { dailyListen: 1, totalListen: 1 } },
+    { $inc: { dailyListen: 1, weeklyListen: 1, totalListen: 1 } },
     { new: true }
   ).populate(['artist', 'genre']);
 

@@ -10,6 +10,10 @@ require('./src/infrastructure/config/database');
 const app = express();
 const port = process.env.PORT || 8000;
 
+// Initialize Scheduled Tasks (Cron Jobs)
+const { initCronJobs } = require('./src/infrastructure/config/cron');
+initCronJobs();
+
 // Swagger documentation
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./src/infrastructure/config/swagger');
