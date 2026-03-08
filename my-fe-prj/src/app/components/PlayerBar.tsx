@@ -25,6 +25,18 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
       if (isPlaying) {
         audioRef.current.play().catch(err => console.error("Playback error:", err));
       }
+
+      // Increment listen count in backend
+      const incrementListen = async () => {
+        try {
+          await fetch(`http://localhost:8000/api/songs/listen/${currentSong.id}`, {
+            method: "POST"
+          });
+        } catch (err) {
+          console.error("Failed to increment listen count:", err);
+        }
+      };
+      incrementListen();
     }
   }, [currentSong]);
 
