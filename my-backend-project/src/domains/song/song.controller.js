@@ -40,6 +40,16 @@ const getPopularSongs = async (req, res) => {
     }
 }
 
+const getTrendingSongs = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        const songs = await SongService.getTrendingSongs(limit);
+        res.status(200).json(songs);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const searchSongs = async (req, res) => {
     try {
         const query = req.query.q;
@@ -52,6 +62,7 @@ const searchSongs = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 const getDetailSongs = async (req, res) => {
     try {
         const songId = req.params.id;
@@ -62,6 +73,7 @@ const getDetailSongs = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
 const deleteSong = async (req, res) => {
     try {
         const songId = req.params.id;
@@ -71,6 +83,7 @@ const deleteSong = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 const searchSongsByGenre = async (req, res) => {
     try {
         const genreName = req.params.id;
@@ -83,4 +96,4 @@ const searchSongsByGenre = async (req, res) => {
     }
 }
 
-module.exports = { getSongPathById, getAllSongs, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, deleteSong };
+module.exports = { getSongPathById, getAllSongs, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, getTrendingSongs, deleteSong };

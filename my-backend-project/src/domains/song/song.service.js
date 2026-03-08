@@ -37,6 +37,15 @@ const getPopularSongs = async (limit = 10) => {
     .populate(['artist', 'genre']);
   return songs;
 }
+
+const getTrendingSongs = async (limit = 10) => {
+  const songs = await Song.find()
+    .sort({ weeklyListen: -1 })
+    .limit(limit)
+    .populate(['artist', 'genre']);
+  return songs;
+}
+
 const searchSongsByGenre = async (genreName) => {
   const genre = await Genre.findOne({
     name: { $regex: genreName, $options: 'i' }
@@ -49,11 +58,9 @@ const searchSongsByGenre = async (genreName) => {
   }).populate(['artist']);
 
   return songs;
-
 }
 
 const searchSongs = async (query) => {
-  // Tìm các artist có tên khớp với query
   const artists = await Artist.find({
     name: { $regex: query, $options: 'i' }
   });
@@ -85,17 +92,15 @@ const deleteSong = async (songId) => {
 
   if (song.cloudinaryId) {
     try {
-      // 'video' dùng cho cả audio/music trên Cloudinary
       await cloudinary.uploader.destroy(song.cloudinaryId, { resource_type: 'video' });
     } catch (err) {
       console.error('Cloudinary delete error:', err);
     }
   }
 
-  //Xóa trong DB
   await Song.findByIdAndDelete(songId);
 
   return { message: 'Song deleted successfully from DB and Cloudinary' };
 }
 
-module.exports = { getAllSong, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, deleteSong, searchSongsByGenre };
+module.exports = { getAllSong, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, getTrendingSongs, deleteSong, searchSongsByGenre };

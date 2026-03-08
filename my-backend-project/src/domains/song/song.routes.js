@@ -56,6 +56,40 @@ router.get('/search', songController.searchSongs);
 
 /**
  * @swagger
+ * /api/songs/popular:
+ *   get:
+ *     summary: Lấy danh sách bài hát phổ biến nhất
+ *     tags: [Songs]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Danh sách bài hát phổ biến
+ */
+router.get('/popular', songController.getPopularSongs);
+
+/**
+ * @swagger
+ * /api/songs/trending:
+ *   get:
+ *     summary: Lấy danh sách bài hát trending trong tuần
+ *     tags: [Songs]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Danh sách bài hát trending
+ */
+router.get('/trending', songController.getTrendingSongs);
+
+/**
+ * @swagger
  * /api/songs/{id}:
  *   get:
  *     summary: Lấy thông tin chi tiết bài hát theo ID
@@ -93,23 +127,6 @@ router.post('/listen/:id', songController.incrementListenCount);
 
 /**
  * @swagger
- * /api/songs/popular:
- *   get:
- *     summary: Lấy danh sách bài hát phổ biến nhất
- *     tags: [Songs]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Danh sách bài hát phổ biến
- */
-router.get('/popular', songController.getPopularSongs);
-
-/**
- * @swagger
  * /api/songs/{id}:
  *   delete:
  *     summary: Xóa bài hát (Admin only)
@@ -129,4 +146,3 @@ router.get('/popular', songController.getPopularSongs);
 router.delete('/:id', isAuthenticated, isAdmin, songController.deleteSong);
 
 module.exports = router;
-

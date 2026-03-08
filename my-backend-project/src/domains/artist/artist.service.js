@@ -1,4 +1,5 @@
 const Artist = require('./artist.model');
+const Song = require('../song/song.model');
 
 const getAllArtists = async () => {
     return await Artist.find();
@@ -23,4 +24,31 @@ const deleteArtist = async (id) => {
     return await Artist.findByIdAndDelete(id);
 };
 
-module.exports = { getAllArtists, getArtistById, createArtist, updateArtist, deleteArtist };
+const getTrendingArtists = async (limit = 10) => {
+    const trending = await Song.aggregate([
+        {
+            $group: {
+                _id: "$artist",
+                weeklyListenCount: { $sum: "$weeklyListen" }
+            }
+        },
+        { $sort: { weeklyListenCount: -1 } },
+        { $limit: limit },
+        {
+            $lookup: {
+                from: "artists",
+                localField: "_id",
+                foreignField: "_id",
+                as: "artistDetails"
+            }
+        },
+        { $unwind: "$artistDetails" }
+    ]);
+    return trending.map(t => ({
+        ...t.artistDetails,
+        weeklyListenCount: t.weeklyListenCount,
+        id: t.artistDetails._id
+    }));
+};
+
+module.exports = { getAllArtists, getArtistById, createArtist, updateArtist, deleteArtist, getTrendingArtists };

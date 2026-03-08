@@ -13,6 +13,23 @@ const isAdmin = require('../../infrastructure/middleware/isAdmin');
 
 /**
  * @swagger
+ * /api/artists/trending:
+ *   get:
+ *     summary: Lấy danh sách nghệ sĩ trending (tổng lượt nghe tuần cao nhất)
+ *     tags: [Artists]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Danh sách nghệ sĩ trending
+ */
+router.get('/trending', artistController.getTrendingArtists);
+
+/**
+ * @swagger
  * /api/artists:
  *   get:
  *     summary: Lấy danh sách tất cả nghệ sĩ
@@ -56,4 +73,3 @@ router.get('/:id', artistController.getArtistById);
 router.post('/', isAuthenticated, isAdmin, artistController.createArtist);
 
 module.exports = router;
-

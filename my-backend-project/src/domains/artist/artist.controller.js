@@ -27,4 +27,14 @@ const createArtist = async (req, res) => {
     }
 };
 
-module.exports = { getAllArtists, getArtistById, createArtist };
+const getTrendingArtists = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        const artists = await ArtistService.getTrendingArtists(limit);
+        res.status(200).json(artists);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getAllArtists, getArtistById, createArtist, getTrendingArtists };
