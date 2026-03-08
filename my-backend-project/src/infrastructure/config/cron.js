@@ -1,5 +1,5 @@
 const cron = require('node-cron');
-const Song = require('../domains/song/song.model');
+const Song = require('../../domains/song/song.model');
 
 /**
  * Initialize all scheduled tasks

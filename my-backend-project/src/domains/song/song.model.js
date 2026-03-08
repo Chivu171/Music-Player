@@ -30,6 +30,8 @@ const mongoose = require('mongoose');
  *           type: number
  *         dailyListen:
  *           type: number
+ *         weeklyListen:
+ *           type: number
  *         totalListen:
  *           type: number
  */
