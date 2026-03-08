@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { Sunrise, Sun, Moon } from "lucide-react";
 import { useOutletContext } from "react-router";
 import { SongCard } from "../components/SongCard";
 import { mockSongs, Song } from "../data/mockData";
@@ -38,6 +39,13 @@ export function Home() {
     fetchSongs();
   }, []);
 
+  const { text: greeting, subtext: greetingSubtext, icon: greetingIcon } = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return { text: "Good morning", subtext: "Ready to start your day with some music?", icon: <Sunrise size={40} className="text-amber-400" /> };
+    if (hour >= 12 && hour < 18) return { text: "Good afternoon", subtext: "Time for a musical break and some fresh tunes?", icon: <Sun size={40} className="text-yellow-400" /> };
+    return { text: "Good evening", subtext: "Relax and unwind with your favorite collection.", icon: <Moon size={40} className="text-indigo-400" /> };
+  }, []);
+
   const featuredSongs = songs.slice(0, 4);
   const recentlyPlayed = songs.slice(0, 6); // Mocking recently played with random DB songs as requested
 
@@ -68,8 +76,19 @@ export function Home() {
 
   return (
     <div className="p-6">
-      <section className="mb-8">
-        <h2 className="text-3xl text-white mb-6">Good evening</h2>
+      <section className="mb-8 p-6 bg-gradient-to-br from-zinc-900/80 to-zinc-950 border border-white/5 rounded-[32px] shadow-2xl relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 blur-[80px] rounded-full pointer-events-none" />
+
+        <div className="flex items-center gap-5 mb-8">
+          <div className="bg-zinc-800/50 p-4 rounded-2xl border border-white/5 shadow-inner">
+            {greetingIcon}
+          </div>
+          <div>
+            <h2 className="text-4xl font-black text-white tracking-tighter mb-1">{greeting}</h2>
+            <p className="text-zinc-400 font-medium tracking-wide">{greetingSubtext}</p>
+          </div>
+        </div>
         {featuredSongs.length > 0 ? (
           <div className="grid grid-cols-2 gap-4">
             {featuredSongs.map((song) => (

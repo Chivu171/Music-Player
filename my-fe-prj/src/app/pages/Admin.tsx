@@ -30,7 +30,7 @@ interface Song {
 }
 
 export function Admin() {
-    const [activeTab, setActiveTab] = useState<"upload" | "album">("upload");
+    const [activeTab, setActiveTab] = useState<"upload" | "album" | "artist">("upload");
     const [artists, setArtists] = useState<Artist[]>([]);
     const [genres, setGenres] = useState<Genre[]>([]);
     const [songs, setSongs] = useState<Song[]>([]);
@@ -57,6 +57,13 @@ export function Admin() {
         thumbnail: "" // Not used in multipart but for model reference
     });
     const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
+
+    // Artist State
+    const [artistData, setArtistData] = useState({
+        name: "",
+        bio: "",
+        imageUrl: ""
+    });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -171,6 +178,39 @@ export function Admin() {
         }
     };
 
+    const handleCreateArtist = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setMessage(null);
+
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("http://localhost:8000/api/artists", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(artistData)
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || "Failed to create artist");
+
+            setMessage({ type: "success", text: "Artist created successfully!" });
+            setArtistData({ name: "", bio: "", imageUrl: "" });
+
+            // Refresh artist list
+            const artistsRes = await fetch("http://localhost:8000/api/artists");
+            const artistsData = await artistsRes.json();
+            setArtists(artistsData);
+        } catch (err: any) {
+            setMessage({ type: "error", text: err.message });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     if (isFetchingData) {
         return (
             <div className="flex-1 bg-zinc-950 flex items-center justify-center">
@@ -230,6 +270,16 @@ export function Admin() {
                     >
                         <Plus size={18} />
                         Create Album
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("artist")}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === "artist"
+                            ? "bg-green-500 text-black shadow-lg shadow-green-500/20"
+                            : "text-zinc-400 hover:text-white"
+                            }`}
+                    >
+                        <User size={18} />
+                        Create Artist
                     </button>
                 </div>
 
@@ -376,7 +426,7 @@ export function Admin() {
                                 </button>
                             </div>
                         </form>
-                    ) : (
+                    ) : activeTab === "album" ? (
                         <form onSubmit={handleCreateAlbum} className="max-w-2xl mx-auto space-y-8">
                             <div className="space-y-2">
                                 <label className="text-zinc-500 text-xs font-black uppercase tracking-widest px-1">Album Title</label>
@@ -429,13 +479,13 @@ export function Admin() {
                                                     key={song._id}
                                                     onClick={() => toggleSongSelection(song._id)}
                                                     className={`group flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all ${selectedSongs.includes(song._id)
-                                                            ? "bg-green-500/10 border border-green-500/20"
-                                                            : "hover:bg-white/5 border border-transparent"
+                                                        ? "bg-green-500/10 border border-green-500/20"
+                                                        : "hover:bg-white/5 border border-transparent"
                                                         }`}
                                                 >
                                                     <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedSongs.includes(song._id)
-                                                            ? "bg-green-500 border-green-500"
-                                                            : "border-zinc-700 group-hover:border-zinc-500"
+                                                        ? "bg-green-500 border-green-500"
+                                                        : "border-zinc-700 group-hover:border-zinc-500"
                                                         }`}>
                                                         {selectedSongs.includes(song._id) && <CheckCircle2 size={12} className="text-black" strokeWidth={4} />}
                                                     </div>
@@ -465,6 +515,60 @@ export function Admin() {
                                 className="w-full bg-green-500 hover:bg-green-400 text-black h-16 rounded-2xl font-black flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-green-500/20 disabled:opacity-50"
                             >
                                 {isLoading ? <Loader2 className="animate-spin" /> : "Create Collection"}
+                            </button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleCreateArtist} className="max-w-2xl mx-auto space-y-8">
+                            <div className="space-y-2">
+                                <label className="text-zinc-500 text-xs font-black uppercase tracking-widest px-1">Artist Name</label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <User size={18} className="text-zinc-600 group-focus-within:text-green-500 transition-colors" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={artistData.name}
+                                        onChange={(e) => setArtistData({ ...artistData, name: e.target.value })}
+                                        className="w-full bg-zinc-800/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/50 transition-all font-medium"
+                                        placeholder="Enter artist name"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-zinc-500 text-xs font-black uppercase tracking-widest px-1">Image URL (Optional)</label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <ImageIcon size={18} className="text-zinc-600 group-focus-within:text-green-500 transition-colors" />
+                                    </div>
+                                    <input
+                                        type="url"
+                                        value={artistData.imageUrl}
+                                        onChange={(e) => setArtistData({ ...artistData, imageUrl: e.target.value })}
+                                        className="w-full bg-zinc-800/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/50 transition-all font-medium"
+                                        placeholder="https://..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-zinc-500 text-xs font-black uppercase tracking-widest px-1">Artist Bio</label>
+                                <textarea
+                                    value={artistData.bio}
+                                    onChange={(e) => setArtistData({ ...artistData, bio: e.target.value })}
+                                    rows={4}
+                                    className="w-full bg-zinc-800/40 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/50 transition-all font-medium resize-none"
+                                    placeholder="Tell us about this artist..."
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-green-500 hover:bg-green-400 text-black h-16 rounded-2xl font-black flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-green-500/20 disabled:opacity-50"
+                            >
+                                {isLoading ? <Loader2 className="animate-spin" /> : "Confirm Creation"}
                             </button>
                         </form>
                     )}
