@@ -174,4 +174,33 @@ const uploadAvatar = async (req, res) => {
     }
 };
 
-module.exports = { register, login, refreshToken, getMe, changePassword, updateProfile, likeSong, unlikeSong, getLikedSongs, addToHistory, getHistory, uploadAvatar }
+const followArtist = async (req, res) => {
+    try {
+        const artistId = req.params.artistId;
+        const user = await UserService.followArtist(req.user.id, artistId);
+        res.status(200).json({ message: 'Artist followed', user });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const unfollowArtist = async (req, res) => {
+    try {
+        const artistId = req.params.artistId;
+        const user = await UserService.unfollowArtist(req.user.id, artistId);
+        res.status(200).json({ message: 'Artist unfollowed', user });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const getFollowedArtists = async (req, res) => {
+    try {
+        const artists = await UserService.getFollowedArtists(req.user.id);
+        res.status(200).json(artists);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+module.exports = { register, login, refreshToken, getMe, changePassword, updateProfile, likeSong, unlikeSong, getLikedSongs, addToHistory, getHistory, uploadAvatar, followArtist, unfollowArtist, getFollowedArtists };

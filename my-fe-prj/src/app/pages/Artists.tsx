@@ -54,6 +54,18 @@ export function Artists() {
         setTrendingArtists(trendingData.map(mapArtist));
         setAllArtists(allData.map(mapArtist));
         setPopularTracks(popularData.map(mapSong));
+
+        // Fetch followed artists if logged in
+        const token = localStorage.getItem("token");
+        if (token) {
+          const followedRes = await fetch("http://localhost:8000/api/auth/followed-artists", {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (followedRes.ok) {
+            const followedData = await followedRes.json();
+            setFollowedArtists(new Set(followedData.map((a: any) => a._id)));
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch artists data:", error);
       } finally {
@@ -68,7 +80,15 @@ export function Artists() {
     e.stopPropagation(); // prevent navigation
     if (followedArtists.has(artistId)) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/artists/${artistId}/follow`, { method: "POST" });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+      const res = await fetch(`http://localhost:8000/api/auth/follow/${artistId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (res.ok) {
         setFollowedArtists(prev => new Set(prev).add(artistId));
       }
@@ -148,8 +168,8 @@ export function Artists() {
                         onClick={(e) => handleFollow(artist.id, e)}
                         disabled={followedArtists.has(artist.id)}
                         className={`px-6 py-2.5 rounded-full font-bold transition-all border ${followedArtists.has(artist.id)
-                            ? "bg-white text-black border-white"
-                            : "bg-zinc-800/80 backdrop-blur-md text-white hover:bg-zinc-700 border-white/10"
+                          ? "bg-white text-black border-white"
+                          : "bg-zinc-800/80 backdrop-blur-md text-white hover:bg-zinc-700 border-white/10"
                           }`}
                       >
                         {followedArtists.has(artist.id) ? "Following" : "Follow"}
@@ -197,8 +217,8 @@ export function Artists() {
                     onClick={(e) => handleFollow(artist.id, e)}
                     disabled={followedArtists.has(artist.id)}
                     className={`text-xs font-bold border px-4 py-1.5 rounded-full transition-all flex items-center gap-2 w-fit ${followedArtists.has(artist.id)
-                        ? "bg-white text-black border-white"
-                        : "text-white/90 bg-white/5 border-white/5 hover:bg-white/10"
+                      ? "bg-white text-black border-white"
+                      : "text-white/90 bg-white/5 border-white/5 hover:bg-white/10"
                       }`}
                   >
                     {!followedArtists.has(artist.id) && <UserCheck size={12} />}

@@ -88,6 +88,6 @@ router.post('/', isAuthenticated, isAdmin, artistController.createArtist);
  *       200:
  *         description: Tăng lượt theo dõi thành công
  */
-router.post('/:id/follow', artistController.incrementFollower);
+router.post('/:id/follow', isAuthenticated, artistController.incrementFollower);
 
 module.exports = router;

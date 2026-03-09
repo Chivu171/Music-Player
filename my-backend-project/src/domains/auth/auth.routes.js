@@ -205,5 +205,50 @@ router.post('/history/:songId', isAuthenticated, userController.addToHistory);
  */
 router.get('/history', isAuthenticated, userController.getHistory);
 
+/**
+ * @swagger
+ * /api/auth/follow/{artistId}:
+ *   post:
+ *     summary: Theo dõi nghệ sĩ
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: artistId
+ *         required: true
+ *         schema:
+ *           type: string
+ */
+router.post('/follow/:artistId', isAuthenticated, userController.followArtist);
+
+/**
+ * @swagger
+ * /api/auth/follow/{artistId}:
+ *   delete:
+ *     summary: Bỏ theo dõi nghệ sĩ
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: artistId
+ *         required: true
+ *         schema:
+ *           type: string
+ */
+router.delete('/follow/:artistId', isAuthenticated, userController.unfollowArtist);
+
+/**
+ * @swagger
+ * /api/auth/followed-artists:
+ *   get:
+ *     summary: Lấy danh sách nghệ sĩ đã theo dõi
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/followed-artists', isAuthenticated, userController.getFollowedArtists);
+
 module.exports = router;
 

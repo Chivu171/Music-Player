@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema({
         song: { type: mongoose.Schema.Types.ObjectId, ref: 'Song' },
         listenedAt: { type: Date, default: Date.now }
     }],
+    followingArtists: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Artist'
+    }],
     refreshTokens: [String]
 }, { timestamps: true }) // timestamps tự động thêm createdAt và updatedAt
 

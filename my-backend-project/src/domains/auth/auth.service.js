@@ -163,6 +163,34 @@ const getHistory = async (userId) => {
     return user.listenHistory;
 };
 
+const followArtist = async (userId, artistId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    if (user.followingArtists.includes(artistId)) {
+        throw new Error('Artist already followed');
+    }
+
+    user.followingArtists.push(artistId);
+    await user.save();
+    return user;
+};
+
+const unfollowArtist = async (userId, artistId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    user.followingArtists = user.followingArtists.filter(id => id.toString() !== artistId);
+    await user.save();
+    return user;
+};
+
+const getFollowedArtists = async (userId) => {
+    const user = await User.findById(userId).populate('followingArtists');
+    if (!user) throw new Error('User not found');
+    return user.followingArtists;
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -174,5 +202,8 @@ module.exports = {
     getLikedSongs,
     addToHistory,
     getHistory,
-    refreshAccessToken
+    refreshAccessToken,
+    followArtist,
+    unfollowArtist,
+    getFollowedArtists
 };

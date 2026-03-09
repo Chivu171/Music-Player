@@ -61,6 +61,15 @@ export function ArtistDetail() {
                     setAlbums(albumsData);
                 }
 
+                // Fetch if following
+                if (token) {
+                    const followedRes = await fetch("http://localhost:8000/api/auth/followed-artists", { headers });
+                    if (followedRes.ok) {
+                        const followedData = await followedRes.json();
+                        setIsFollowing(followedData.some((a: any) => a._id === id));
+                    }
+                }
+
             } catch (error) {
                 console.error("Failed to load artist details:", error);
             } finally {
@@ -74,8 +83,14 @@ export function ArtistDetail() {
     const handleFollow = async () => {
         if (!artist || isFollowing) return;
         try {
-            const res = await fetch(`http://localhost:8000/api/artists/${artist.id}/follow`, {
-                method: "POST"
+            const token = localStorage.getItem("token");
+            if (!token) {
+                navigate("/login");
+                return;
+            }
+            const res = await fetch(`http://localhost:8000/api/auth/follow/${artist.id}`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
                 // Remove commas and parse to int, increment, then put commas back
@@ -149,8 +164,8 @@ export function ArtistDetail() {
                         onClick={handleFollow}
                         disabled={isFollowing}
                         className={`px-8 py-2 rounded-full border text-sm font-bold tracking-widest transition-colors ${isFollowing
-                                ? "bg-white text-black border-white"
-                                : "border-zinc-500 text-white hover:border-white"
+                            ? "bg-white text-black border-white"
+                            : "border-zinc-500 text-white hover:border-white"
                             }`}
                     >
                         {isFollowing ? "FOLLOWING" : "FOLLOW"}
