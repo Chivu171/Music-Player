@@ -51,4 +51,8 @@ const getTrendingArtists = async (limit = 10) => {
     }));
 };
 
-module.exports = { getAllArtists, getArtistById, createArtist, updateArtist, deleteArtist, getTrendingArtists };
+const incrementFollower = async (id) => {
+    return await Artist.findByIdAndUpdate(id, { $inc: { followers: 1 } }, { new: true });
+};
+
+module.exports = { getAllArtists, getArtistById, createArtist, updateArtist, deleteArtist, getTrendingArtists, incrementFollower };

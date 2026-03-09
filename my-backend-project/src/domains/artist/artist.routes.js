@@ -72,4 +72,22 @@ router.get('/:id', artistController.getArtistById);
  */
 router.post('/', isAuthenticated, isAdmin, artistController.createArtist);
 
+/**
+ * @swagger
+ * /api/artists/{id}/follow:
+ *   post:
+ *     summary: Tăng lược theo dõi (follower) của nghệ sĩ
+ *     tags: [Artists]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Tăng lượt theo dõi thành công
+ */
+router.post('/:id/follow', artistController.incrementFollower);
+
 module.exports = router;

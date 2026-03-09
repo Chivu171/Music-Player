@@ -103,4 +103,11 @@ const deleteSong = async (songId) => {
   return { message: 'Song deleted successfully from DB and Cloudinary' };
 }
 
-module.exports = { getAllSong, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, getTrendingSongs, deleteSong, searchSongsByGenre };
+const getSongsByArtistId = async (artistId) => {
+  const songs = await Song.find({ artist: artistId })
+    .sort({ totalListen: -1 })
+    .populate(['artist', 'genre']);
+  return songs;
+}
+
+module.exports = { getAllSong, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, getTrendingSongs, deleteSong, searchSongsByGenre, getSongsByArtistId };

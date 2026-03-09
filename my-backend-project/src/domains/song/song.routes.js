@@ -90,6 +90,25 @@ router.get('/trending', songController.getTrendingSongs);
 
 /**
  * @swagger
+ * /api/songs/artist/{id}:
+ *   get:
+ *     summary: Lấy danh sách bài hát của một nghệ sĩ
+ *     tags: [Songs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của nghệ sĩ
+ *     responses:
+ *       200:
+ *         description: Danh sách bài hát của nghệ sĩ
+ */
+router.get('/artist/:id', songController.getSongsByArtistId);
+
+/**
+ * @swagger
  * /api/songs/{id}:
  *   get:
  *     summary: Lấy thông tin chi tiết bài hát theo ID

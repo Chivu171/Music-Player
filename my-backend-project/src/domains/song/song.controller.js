@@ -96,4 +96,14 @@ const searchSongsByGenre = async (req, res) => {
     }
 }
 
-module.exports = { getSongPathById, getAllSongs, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, getTrendingSongs, deleteSong };
+const getSongsByArtistId = async (req, res) => {
+    try {
+        const artistId = req.params.id;
+        const songs = await SongService.getSongsByArtistId(artistId);
+        res.status(200).json(songs);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+module.exports = { getSongPathById, getAllSongs, searchSongs, getDetailSongs, incrementListenCount, getPopularSongs, getTrendingSongs, deleteSong, searchSongsByGenre, getSongsByArtistId };

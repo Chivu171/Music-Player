@@ -8,6 +8,8 @@ import { Artists } from "@/app/pages/Artists";
 import { Login } from "@/app/pages/Login";
 import { Register } from "@/app/pages/Register";
 import { Admin } from "@/app/pages/Admin";
+import { Search } from "@/app/pages/Search";
+import { ArtistDetail } from "@/app/pages/ArtistDetail";
 
 export const router = createBrowserRouter([
   {
@@ -19,7 +21,9 @@ export const router = createBrowserRouter([
       { path: "recommended", Component: Recommended },
       { path: "albums", Component: Albums },
       { path: "artists", Component: Artists },
+      { path: "artist/:id", Component: ArtistDetail },
       { path: "admin", Component: Admin },
+      { path: "search", Component: Search },
     ],
   },
   {

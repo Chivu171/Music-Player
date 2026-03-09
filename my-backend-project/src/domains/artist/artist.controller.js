@@ -37,4 +37,13 @@ const getTrendingArtists = async (req, res) => {
     }
 };
 
-module.exports = { getAllArtists, getArtistById, createArtist, getTrendingArtists };
+const incrementFollower = async (req, res) => {
+    try {
+        const artist = await ArtistService.incrementFollower(req.params.id);
+        res.status(200).json(artist);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getAllArtists, getArtistById, createArtist, getTrendingArtists, incrementFollower };
