@@ -96,12 +96,17 @@ const deletePlayList = async (playlistId, userID) => {
   return await PlayList.findByIdAndDelete(playlistId);
 };
 //cho trang kham pha
-const getAllAlbums = async (artistName) => {
-  const query = { type: 'album' };
-  if (artistName) {
-    query.artistName = { $regex: artistName, $options: 'i' };
-  }
-  return await PlayList.find(query);
+// Lấy tất cả album
+const getAllAlbums = async () => {
+  return await PlayList.find({ type: 'album' }).populate('songs');
+};
+
+// Lấy album theo tên nghệ sĩ
+const getAlbumsByArtist = async (artistName) => {
+  return await PlayList.find({
+    type: 'album',
+    artistName: { $regex: artistName, $options: 'i' }
+  }).populate('songs');
 };
 
 const addSongToPlayList = async (playlistId, songId, userID) => {
@@ -171,5 +176,6 @@ module.exports = {
   updatePlayList,
   deletePlayList,
   getAllAlbums,
+  getAlbumsByArtist,
   shuffleSongs
 };
