@@ -3,6 +3,7 @@ const router = express.Router();
 const playListController = require('./playlist.controller');
 const isAuthenticated = require('../../infrastructure/middleware/isAuthenticated');
 const isAdmin = require('../../infrastructure/middleware/isAdmin');
+const { uploadAlbumCover } = require('../../infrastructure/middleware/uploadMiddleware');
 
 // Tất cả các route yêu cầu xác thực
 router.use(isAuthenticated);
@@ -194,7 +195,7 @@ router.get('/:id', playListController.getById);
  *       201:
  *         description: Tạo album thành công
  */
-router.post('/admin/create-album', isAdmin, playListController.createAlbum);
+router.post('/admin/create-album', isAdmin, uploadAlbumCover.single('albumCover'), playListController.createAlbum);
 
 /**
  * @swagger

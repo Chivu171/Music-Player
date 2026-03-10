@@ -13,7 +13,7 @@ const createUserPlaylist = async (playListData, userID) => {
 };
 
 
-const createAlbum = async (albumData, adminID) => {
+const createAlbum = async (albumData, adminID, thumbnailUrl = null) => {
   const admin = await User.findById(adminID);
   if (!admin || admin.role !== 'admin') {
     throw new Error('Chỉ Admin mới có quyền tạo Album.');
@@ -22,6 +22,7 @@ const createAlbum = async (albumData, adminID) => {
     ...albumData,
     type: 'album',
     createdBy: adminID,
+    ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
   });
   return await newAlbum.save();
 };

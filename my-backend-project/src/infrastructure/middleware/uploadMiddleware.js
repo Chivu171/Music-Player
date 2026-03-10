@@ -10,5 +10,6 @@ cloudinary.config({
 // Dùng memoryStorage để tránh lưu file tạm vào ổ cứng
 const storage = multer.memoryStorage();
 const uploadAvatar = multer({ storage: storage });
+const uploadAlbumCover = multer({ storage: storage });
 
-module.exports = { uploadAvatar, cloudinary };
+module.exports = { uploadAvatar, uploadAlbumCover, cloudinary };

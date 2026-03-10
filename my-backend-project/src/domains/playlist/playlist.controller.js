@@ -1,4 +1,6 @@
 const PlayListService = require('./playlist.service');
+const { cloudinary } = require('../../infrastructure/middleware/uploadMiddleware');
+const streamifier = require('streamifier');
 
 
 const createUserPlaylist = async (req, res) => {
@@ -13,7 +15,23 @@ const createUserPlaylist = async (req, res) => {
 
 const createAlbum = async (req, res) => {
   try {
-    const album = await PlayListService.createAlbum(req.body, req.user.id);
+    let thumbnailUrl = null;
+
+    if (req.file) {
+      // Upload ảnh bìa lên Cloudinary qua buffer stream
+      thumbnailUrl = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: 'album-covers', resource_type: 'image' },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+      });
+    }
+
+    const album = await PlayListService.createAlbum(req.body, req.user.id, thumbnailUrl);
     res.status(201).json({ message: 'Album đã được tạo thành công!', album });
   } catch (error) {
     res.status(403).json({ message: error.message });

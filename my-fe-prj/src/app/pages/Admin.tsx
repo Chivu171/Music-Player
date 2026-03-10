@@ -54,9 +54,12 @@ export function Admin() {
         name: "",
         description: "",
         artistName: "",
-        thumbnail: "" // Not used in multipart but for model reference
     });
+    const [albumCoverFile, setAlbumCoverFile] = useState<File | null>(null);
+    const [albumCoverPreview, setAlbumCoverPreview] = useState<string | null>(null);
     const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successItem, setSuccessItem] = useState<{ name: string, type: string } | null>(null);
 
     // Artist State
     const [artistData, setArtistData] = useState({
@@ -130,7 +133,9 @@ export function Admin() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || "Upload failed");
 
-            setMessage({ type: "success", text: "Song uploaded successfully!" });
+            setSuccessItem({ name: songData.title, type: "Song" });
+            setShowSuccessModal(true);
+
             setSongData({ title: "", artist: "", artistName: "", genreId: "", album: "" });
             setSongFile(null);
             setCoverFile(null);
@@ -153,23 +158,32 @@ export function Admin() {
 
         try {
             const token = localStorage.getItem("token");
+            const formData = new FormData();
+            formData.append("name", albumData.name);
+            formData.append("description", albumData.description);
+            formData.append("artistName", albumData.artistName);
+            selectedSongs.forEach(id => formData.append("songs[]", id));
+            if (albumCoverFile) {
+                formData.append("albumCover", albumCoverFile);
+            }
+
             const response = await fetch("http://localhost:8000/api/playlists/admin/create-album", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    ...albumData,
-                    songs: selectedSongs
-                })
+                body: formData
             });
 
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || "Failed to create album");
 
-            setMessage({ type: "success", text: "Album created successfully!" });
-            setAlbumData({ name: "", description: "", artistName: "", thumbnail: "" });
+            setSuccessItem({ name: albumData.name, type: "Album" });
+            setShowSuccessModal(true);
+
+            setAlbumData({ name: "", description: "", artistName: "" });
+            setAlbumCoverFile(null);
+            setAlbumCoverPreview(null);
             setSelectedSongs([]);
         } catch (err: any) {
             setMessage({ type: "error", text: err.message });
@@ -197,7 +211,9 @@ export function Admin() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || "Failed to create artist");
 
-            setMessage({ type: "success", text: "Artist created successfully!" });
+            setSuccessItem({ name: artistData.name, type: "Artist" });
+            setShowSuccessModal(true);
+
             setArtistData({ name: "", bio: "", imageUrl: "" });
 
             // Refresh artist list
@@ -237,6 +253,56 @@ export function Admin() {
                             </div>
                             <div className="w-48 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                                 <div className="h-full bg-green-500 animate-progress origin-left" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Success Modal Overlay */}
+            {showSuccessModal && successItem && (
+                <div className="fixed inset-0 z-[110] bg-zinc-950/90 backdrop-blur-xl flex flex-col items-center justify-center animate-in zoom-in-95 fade-in duration-300 p-6">
+                    <div className="relative max-w-sm w-full">
+                        <div className="absolute inset-0 bg-green-500/20 blur-[120px] rounded-full animate-pulse" />
+                        <div className="relative bg-zinc-900 border border-white/10 p-10 rounded-[48px] shadow-2xl flex flex-col items-center text-center gap-8">
+                            <div className="relative">
+                                <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center border border-green-500/20 scale-110">
+                                    <CheckCircle2 size={56} className="text-green-500 animate-in zoom-in-50 duration-500" strokeWidth={2.5} />
+                                </div>
+                                <div className="absolute inset-0 bg-green-500/20 blur-2xl animate-pulse" />
+                            </div>
+
+                            <div className="space-y-3">
+                                <h3 className="text-3xl font-black text-white tracking-tight">Success!</h3>
+                                <div className="space-y-1">
+                                    <p className="text-zinc-400 font-medium">New {successItem.type} created:</p>
+                                    <p className="text-xl font-bold text-green-500 px-4 py-1.5 bg-green-500/5 border border-green-500/10 rounded-xl inline-block max-w-[280px] truncate">
+                                        {successItem.name}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3 w-full">
+                                <button
+                                    onClick={() => {
+                                        setShowSuccessModal(false);
+                                        setSuccessItem(null);
+                                    }}
+                                    className="w-full bg-green-500 hover:bg-green-400 text-black h-14 rounded-2xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-500/10 flex items-center justify-center gap-2"
+                                >
+                                    Create Another
+                                    <ChevronRight size={20} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowSuccessModal(false);
+                                        setSuccessItem(null);
+                                        // Optional: stay on general dashboard or specific tab
+                                    }}
+                                    className="w-full bg-zinc-800 hover:bg-zinc-700 text-white h-14 rounded-2xl font-black transition-all border border-white/5"
+                                >
+                                    Dismiss
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -456,11 +522,50 @@ export function Admin() {
                             </div>
 
                             <div className="space-y-2">
+                                <label className="text-zinc-500 text-xs font-black uppercase tracking-widest px-1">Album Cover</label>
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0] || null;
+                                            setAlbumCoverFile(file);
+                                            setAlbumCoverPreview(file ? URL.createObjectURL(file) : null);
+                                        }}
+                                        className="hidden"
+                                        id="album-cover-file"
+                                    />
+                                    <label
+                                        htmlFor="album-cover-file"
+                                        className={`relative flex flex-col items-center justify-center gap-3 w-full h-40 bg-zinc-800/30 border-2 border-dashed rounded-2xl cursor-pointer hover:border-green-500/50 hover:bg-green-500/5 transition-all overflow-hidden ${albumCoverFile ? 'border-green-500/50' : 'border-white/10'
+                                            }`}
+                                    >
+                                        {albumCoverPreview ? (
+                                            <>
+                                                <img src={albumCoverPreview} alt="cover preview" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                                                <div className="relative z-10 flex flex-col items-center gap-1">
+                                                    <ImageIcon size={24} className="text-green-500" />
+                                                    <span className="text-sm font-bold text-green-500 max-w-[200px] truncate">{albumCoverFile?.name}</span>
+                                                    <span className="text-[10px] text-zinc-400">Click to change</span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ImageIcon size={24} className="text-zinc-600" />
+                                                <span className="text-sm font-bold text-zinc-500">Choose cover image</span>
+                                                <span className="text-[10px] text-zinc-600">PNG, JPG, WEBP — Optional</span>
+                                            </>
+                                        )}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
                                 <label className="text-zinc-500 text-xs font-black uppercase tracking-widest px-1">Description</label>
                                 <textarea
                                     value={albumData.description}
                                     onChange={(e) => setAlbumData({ ...albumData, description: e.target.value })}
-                                    rows={4}
+                                    rows={3}
                                     className="w-full bg-zinc-800/40 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/50 transition-all font-medium resize-none"
                                     placeholder="Tell us about this album..."
                                 />

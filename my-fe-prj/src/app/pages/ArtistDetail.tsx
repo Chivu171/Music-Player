@@ -214,7 +214,7 @@ export function ArtistDetail() {
                                     {albums.map((album) => (
                                         <div key={album._id} className="bg-zinc-900/40 p-4 rounded-2xl hover:bg-zinc-800/60 transition-all cursor-pointer group">
                                             <div className="relative mb-4">
-                                                <img src={album.thumbnail ? `https://res.cloudinary.com/dywwla9mp/image/upload/v1/${album.thumbnail}` : 'https://marketplace.canva.com/EAFiB-8g3-E/1/0/1600w/canva-black-minimalist-vinyl-record-album-cover-gBwZOS_0A_w.jpg'} alt={album.name} className="w-full aspect-square object-cover rounded-xl shadow-lg" />
+                                                <img src={album.thumbnail || 'https://marketplace.canva.com/EAFiB-8g3-E/1/0/1600w/canva-black-minimalist-vinyl-record-album-cover-gBwZOS_0A_w.jpg'} alt={album.name} className="w-full aspect-square object-cover rounded-xl shadow-lg" />
                                                 <button className="absolute bottom-3 right-3 bg-green-500 text-black rounded-full p-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105">
                                                     <Play size={20} fill="currentColor" />
                                                 </button>
