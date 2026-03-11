@@ -1,13 +1,11 @@
 const express = require("express");
-const multer = require("multer");
-const cloudinary = require("../../infrastructure/config/cloudinary");
+const { uploadSong, cloudinary } = require("../../infrastructure/middleware/uploadMiddleware");
+const streamifier = require('streamifier');
 const Artist = require("../artist/artist.model");
 const Genre = require("../genre/genre.model");
 const isAdmin = require('../../infrastructure/middleware/isAdmin');
 const isAuthenticated = require('../../infrastructure/middleware/isAuthenticated');
-const fs = require("fs");
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
 const Song = require("./song.model");
 
 /**
@@ -50,7 +48,7 @@ const Song = require("./song.model");
  *       201:
  *         description: Tải lên và lưu bài hát thành công
  */
-router.post("/", isAuthenticated, isAdmin, upload.fields([
+router.post("/", isAuthenticated, isAdmin, uploadSong.fields([
     { name: 'file', maxCount: 1 },
     { name: 'cover', maxCount: 1 }
 ]), async (req, res) => {
@@ -60,21 +58,36 @@ router.post("/", isAuthenticated, isAdmin, upload.fields([
     if (!songFile) {
         return res.status(400).json({ error: "Vui lòng chọn file nhạc!" });
     }
-    try {
-        // Upload audio file
-        const audioResult = await cloudinary.uploader.upload(songFile.path, {
-            resource_type: "auto",
-        });
-        fs.unlinkSync(songFile.path);
 
-        // Upload cover image (if provided)
+    try {
+        // Hàm helper để upload stream lên Cloudinary
+        const streamUpload = (buffer, options = {}) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    options,
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                streamifier.createReadStream(buffer).pipe(stream);
+            });
+        };
+
+        // Upload audio file directly from buffer
+        const audioResult = await streamUpload(songFile.buffer, {
+            resource_type: "auto",
+            folder: "music-player-songs"
+        });
+
+        // Upload cover image from buffer (if provided)
         let coverUrl = 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png';
         if (coverFile) {
-            const coverResult = await cloudinary.uploader.upload(coverFile.path, {
+            const coverResult = await streamUpload(coverFile.buffer, {
                 resource_type: "image",
+                folder: "music-player-covers"
             });
             coverUrl = coverResult.secure_url;
-            fs.unlinkSync(coverFile.path);
         }
 
         const { title, artistId, genreId } = req.body;
@@ -91,7 +104,7 @@ router.post("/", isAuthenticated, isAdmin, upload.fields([
 
         res.status(201).json(newSong);
     } catch (err) {
-        console.error(err);
+        console.error("Upload error:", err);
         res.status(500).json({ error: err.message });
     }
 });

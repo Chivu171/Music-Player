@@ -53,6 +53,7 @@ app.use(cors({
     if (isAllowed) {
       callback(null, true);
     } else {
+      console.error(`❌ CORS Blocked for origin: ${origin}`);
       callback(new Error('Cross-Origin Request Blocked by CORS'));
     }
   },

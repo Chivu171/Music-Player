@@ -11,5 +11,6 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const uploadAvatar = multer({ storage: storage });
 const uploadAlbumCover = multer({ storage: storage });
+const uploadSong = multer({ storage: storage });
 
-module.exports = { uploadAvatar, uploadAlbumCover, cloudinary };
+module.exports = { uploadAvatar, uploadAlbumCover, uploadSong, cloudinary };
