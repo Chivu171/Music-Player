@@ -88,7 +88,7 @@ npm run dev
 ---
 
 ## 📝 Author
-**Tran Chi Vu** - [LinkedIn](https://www.linkedin.com/in/chivu171) | [GitHub](https://github.com/Chivu171)
+**Tran Chi Vu** - [LinkedIn](https://www.linkedin.com/in/tran-vu-190809282/) | [GitHub](https://github.com/Chivu171)
 
 ## 📄 License
 This project is licensed under the MIT License.
