@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_URL } from "../apiConfig";
 import { useParams, useNavigate } from "react-router";
 import { Play, Loader2, UserCheck } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
@@ -25,7 +26,7 @@ export function ArtistDetail() {
             setLoading(true);
             try {
                 // Fetch Artist
-                const artistRes = await fetch(`http://localhost:8000/api/artists/${id}`);
+                const artistRes = await fetch(`${API_URL}/artists/${id}`);
                 if (!artistRes.ok) throw new Error("Artist not found");
                 const artistData = await artistRes.json();
 
@@ -39,7 +40,7 @@ export function ArtistDetail() {
                 } as any);
 
                 // Fetch Songs
-                const songsRes = await fetch(`http://localhost:8000/api/songs/artist/${id}`);
+                const songsRes = await fetch(`${API_URL}/songs/artist/${id}`);
                 const songsData = await songsRes.json();
                 setSongs(songsData.map((s: any) => ({
                     id: s._id,
@@ -55,7 +56,7 @@ export function ArtistDetail() {
                 const token = localStorage.getItem("token");
                 const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
-                const albumsRes = await fetch(`http://localhost:8000/api/playlists/albums?artistName=${encodeURIComponent(artistData.name)}`, { headers });
+                const albumsRes = await fetch(`${API_URL}/playlists/albums?artistName=${encodeURIComponent(artistData.name)}`, { headers });
                 if (albumsRes.ok) {
                     const albumsData = await albumsRes.json();
                     setAlbums(albumsData);
@@ -63,7 +64,7 @@ export function ArtistDetail() {
 
                 // Fetch if following
                 if (token) {
-                    const followedRes = await fetch("http://localhost:8000/api/auth/followed-artists", { headers });
+                    const followedRes = await fetch(`${API_URL}/auth/followed-artists`, { headers });
                     if (followedRes.ok) {
                         const followedData = await followedRes.json();
                         setIsFollowing(followedData.some((a: any) => a._id === id));
@@ -88,7 +89,7 @@ export function ArtistDetail() {
                 navigate("/login");
                 return;
             }
-            const res = await fetch(`http://localhost:8000/api/auth/follow/${artist.id}`, {
+            const res = await fetch(`${API_URL}/auth/follow/${artist.id}`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }
             });

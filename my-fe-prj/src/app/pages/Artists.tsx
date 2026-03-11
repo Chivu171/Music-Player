@@ -2,6 +2,7 @@ import { useOutletContext, useNavigate } from "react-router";
 import { Play, UserCheck, Music2, Loader2 } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
 import { useState, useEffect } from "react";
+import { API_URL } from "../apiConfig";
 
 interface OutletContext {
   onSongSelect: (song: Song) => void;
@@ -21,15 +22,15 @@ export function Artists() {
       try {
         setLoading(true);
         // Fetch trending artists for spotlight and trending sections
-        const trendingRes = await fetch("http://localhost:8000/api/artists/trending?limit=6");
+        const trendingRes = await fetch(`${API_URL}/artists/trending?limit=6`);
         const trendingData = await trendingRes.json();
 
         // Fetch all artists
-        const allRes = await fetch("http://localhost:8000/api/artists");
+        const allRes = await fetch(`${API_URL}/artists`);
         const allData = await allRes.json();
 
         // Fetch popular tracks
-        const popularRes = await fetch("http://localhost:8000/api/songs/popular?limit=8");
+        const popularRes = await fetch(`${API_URL}/songs/popular?limit=8`);
         const popularData = await popularRes.json();
 
         // Map backend data to frontend interfaces
@@ -58,7 +59,7 @@ export function Artists() {
         // Fetch followed artists if logged in
         const token = localStorage.getItem("token");
         if (token) {
-          const followedRes = await fetch("http://localhost:8000/api/auth/followed-artists", {
+          const followedRes = await fetch(`${API_URL}/auth/followed-artists`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (followedRes.ok) {
@@ -85,7 +86,7 @@ export function Artists() {
         navigate("/login");
         return;
       }
-      const res = await fetch(`http://localhost:8000/api/auth/follow/${artistId}`, {
+      const res = await fetch(`${API_URL}/auth/follow/${artistId}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });

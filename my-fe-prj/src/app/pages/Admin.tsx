@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "../apiConfig";
 import {
     Upload,
     Plus,
@@ -72,9 +73,9 @@ export function Admin() {
         const fetchData = async () => {
             try {
                 const [artistsRes, genresRes, songsRes] = await Promise.all([
-                    fetch("http://localhost:8000/api/artists"),
-                    fetch("http://localhost:8000/api/genres"),
-                    fetch("http://localhost:8000/api/songs/getsongs?limit=100")
+                    fetch(`${API_URL}/artists`),
+                    fetch(`${API_URL}/genres`),
+                    fetch(`${API_URL}/songs/getsongs?limit=100`)
                 ]);
                 const artistsData = await artistsRes.json();
                 const genresData = await genresRes.json();
@@ -122,7 +123,7 @@ export function Admin() {
 
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch("http://localhost:8000/api/upload", {
+            const response = await fetch(`${API_URL}/upload`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -141,7 +142,7 @@ export function Admin() {
             setCoverFile(null);
 
             // Refresh song list to include the new song
-            const songsRes = await fetch("http://localhost:8000/api/songs/getsongs?limit=100");
+            const songsRes = await fetch(`${API_URL}/songs/getsongs?limit=100`);
             const songsData = await songsRes.json();
             setSongs(songsData.songs || []);
         } catch (err: any) {
@@ -167,7 +168,7 @@ export function Admin() {
                 formData.append("albumCover", albumCoverFile);
             }
 
-            const response = await fetch("http://localhost:8000/api/playlists/admin/create-album", {
+            const response = await fetch(`${API_URL}/playlists/admin/create-album`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -199,7 +200,7 @@ export function Admin() {
 
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch("http://localhost:8000/api/artists", {
+            const response = await fetch(`${API_URL}/artists`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -217,7 +218,7 @@ export function Admin() {
             setArtistData({ name: "", bio: "", imageUrl: "" });
 
             // Refresh artist list
-            const artistsRes = await fetch("http://localhost:8000/api/artists");
+            const artistsRes = await fetch(`${API_URL}/artists`);
             const artistsData = await artistsRes.json();
             setArtists(artistsData);
         } catch (err: any) {

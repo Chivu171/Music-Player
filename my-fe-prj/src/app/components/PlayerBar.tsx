@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle } from "lucide-react";
+import { API_URL } from "../apiConfig";
 import { Song } from "../data/mockData";
 
 interface PlayerBarProps {
@@ -28,7 +29,7 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
       // Increment listen count in backend
       const incrementListen = async () => {
         try {
-          await fetch(`http://localhost:8000/api/songs/listen/${currentSong.id}`, {
+          await fetch(`${API_URL}/songs/listen/${currentSong.id}`, {
             method: "POST"
           });
         } catch (err) {
@@ -105,11 +106,7 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
   };
 
   if (!currentSong) {
-    return (
-      <div className="h-24 bg-zinc-950 border-t border-zinc-800 flex items-center justify-center">
-        <p className="text-zinc-500">Select a song to play</p>
-      </div>
-    );
+    return null;
   }
 
   return (

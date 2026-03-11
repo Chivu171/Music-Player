@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_URL } from "../apiConfig";
 import { useOutletContext, useNavigate } from "react-router";
 import { Play, Clock, Music, Loader2 } from "lucide-react";
 import { Song } from "../data/mockData";
@@ -28,7 +29,7 @@ export function Albums() {
         const token = localStorage.getItem("token");
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const response = await fetch('http://localhost:8000/api/playlists/albums', { headers });
+        const response = await fetch(`${API_URL}/playlists/albums`, { headers });
         if (!response.ok) throw new Error("Failed to fetch albums");
 
         const data = await response.json();

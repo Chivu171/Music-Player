@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { API_URL } from "../apiConfig";
 import { Sunrise, Sun, Moon } from "lucide-react";
 import { useOutletContext } from "react-router";
 import { SongCard } from "../components/SongCard";
@@ -16,7 +17,7 @@ export function Home() {
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/songs/getsongs?page=1&limit=12');
+        const response = await fetch(`${API_URL}/songs/getsongs?page=1&limit=12`);
         const data = await response.json();
 
         const mappedSongs: Song[] = (data.songs || []).map((s: any) => ({

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_URL } from "../apiConfig";
 import { useParams, useNavigate, useOutletContext } from "react-router";
 import { Play, Clock, Music, Loader2, ChevronLeft, Calendar, Disc } from "lucide-react";
 import { Song } from "../data/mockData";
@@ -29,7 +30,7 @@ export function AlbumDetail() {
         const fetchAlbumDetail = async () => {
             if (!id) return;
             try {
-                const response = await fetch(`http://localhost:8000/api/playlists/${id}`);
+                const response = await fetch(`${API_URL}/playlists/${id}`);
                 if (!response.ok) throw new Error("Album not found");
 
                 const data = await response.json();

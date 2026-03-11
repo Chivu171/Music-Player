@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../apiConfig";
 import { useOutletContext } from "react-router";
 import { TrendingUp, Play, Heart, MoreHorizontal, Loader2, Music2, User as UserIcon } from "lucide-react";
 import { Song } from "../data/mockData";
@@ -24,8 +25,8 @@ export function Trending() {
     const fetchData = async () => {
       try {
         const [songsRes, artistsRes] = await Promise.all([
-          fetch('http://localhost:8000/api/songs/trending?limit=10'),
-          fetch('http://localhost:8000/api/artists/trending?limit=6')
+          fetch(`${API_URL}/songs/trending?limit=10`),
+          fetch(`${API_URL}/artists/trending?limit=6`)
         ]);
 
         const songsData = await songsRes.json();

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_URL } from "../apiConfig";
 import { Link, useNavigate } from "react-router";
 import { Music2, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 
@@ -33,7 +34,7 @@ export function Register() {
         setError("");
 
         try {
-            const response = await fetch("http://localhost:8000/api/auth/register", {
+            const response = await fetch(`${API_URL}/auth/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

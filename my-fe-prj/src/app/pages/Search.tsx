@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams, useOutletContext } from "react-router";
 import { useState, useEffect } from "react";
+import { API_URL } from "../apiConfig";
 import { Loader2, Play, Search as SearchIcon } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
 
@@ -23,7 +24,7 @@ export function Search() {
 
             setLoading(true);
             try {
-                const res = await fetch(`http://localhost:8000/api/songs/search?q=${encodeURIComponent(query)}`);
+                const res = await fetch(`${API_URL}/songs/search?q=${encodeURIComponent(query)}`);
                 const data = await res.json();
 
                 const mappedSongs: Song[] = data.map((s: any) => ({

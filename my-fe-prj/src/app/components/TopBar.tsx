@@ -1,4 +1,5 @@
 import { Search, Settings, LogOut, User as UserIcon, Loader2, Play } from "lucide-react";
+import { API_URL } from "../apiConfig";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import { Song, Artist } from "../data/mockData";
@@ -51,7 +52,7 @@ export function TopBar() {
 
       setIsSearching(true);
       try {
-        const res = await fetch(`http://localhost:8000/api/songs/search?q=${encodeURIComponent(debouncedQuery)}`);
+        const res = await fetch(`${API_URL}/songs/search?q=${encodeURIComponent(debouncedQuery)}`);
         const data = await res.json();
 
         // The API returns songs, we can extract unique artists from the song results or a separate API.
