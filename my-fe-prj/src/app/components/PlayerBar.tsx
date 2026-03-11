@@ -17,16 +17,17 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 
+  // LOAD SONG
   useEffect(() => {
     if (audioRef.current && currentSong?.audioUrl) {
       audioRef.current.src = currentSong.audioUrl;
       setIsPlaying(true);
       audioRef.current.play().catch(err => console.error("Playback error:", err));
 
-      // Increment listen count in backend
       const incrementListen = async () => {
         try {
           await fetch(`${API_URL}/songs/listen/${currentSong.id}`, {
@@ -36,20 +37,23 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           console.error("Failed to increment listen count:", err);
         }
       };
+
       incrementListen();
     }
   }, [currentSong]);
 
+  // PLAY / PAUSE
   useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.play().catch(err => console.error("Playback error:", err));
-      } else {
-        audioRef.current.pause();
-      }
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.play().catch(err => console.error(err));
+    } else {
+      audioRef.current.pause();
     }
   }, [isPlaying]);
 
+  // VOLUME
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume / 100;
@@ -68,20 +72,26 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
     }
   };
 
+  // END SONG
   const handleEnded = () => {
-    setIsPlaying(false);
-    setCurrentTime(0);
-    if (isRepeat && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-      setIsPlaying(true);
-    } else {
-      onNext();
+    if (isRepeat) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+      }
+      return;
     }
+
+    if (isShuffle) {
+      onNext(); // Layout xử lý random nếu cần
+      return;
+    }
+
+    onNext();
   };
 
   const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    setIsPlaying(prev => !prev);
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -90,6 +100,7 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
       const x = e.clientX - rect.left;
       const percentage = x / rect.width;
       const newTime = percentage * duration;
+
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
@@ -102,16 +113,15 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    setIsMuted(prev => !prev);
   };
 
-  if (!currentSong) {
-    return null;
-  }
+  if (!currentSong) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 h-24 bg-zinc-950/90 backdrop-blur-2xl border-t border-white/5 px-6 flex items-center justify-between z-50 shadow-2xl">
-      {/* Left: Song Info */}
+
+      {/* Left */}
       <div className="flex items-center gap-4 w-1/3 group">
         <div className="relative overflow-hidden rounded-lg shadow-lg shadow-black/40">
           <img
@@ -131,16 +141,17 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
         </div>
       </div>
 
-      {/* Center: Controls & Progress */}
+      {/* Center */}
       <div className="flex-1 max-w-2xl flex flex-col items-center">
+
         <div className="flex items-center gap-6 mb-3">
+
           <button
-            onClick={() => setIsShuffle(!isShuffle)}
+            onClick={() => setIsShuffle(prev => !prev)}
             className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${isShuffle
-              ? "text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]"
-              : "text-zinc-500 hover:text-zinc-300"
+                ? "text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]"
+                : "text-zinc-500 hover:text-zinc-300"
               }`}
-            title="Shuffle"
           >
             <Shuffle size={18} strokeWidth={2.5} />
           </button>
@@ -148,7 +159,6 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           <button
             onClick={onPrevious}
             className="p-1.5 text-zinc-400 hover:text-white transition-all duration-200 hover:scale-110 active:scale-90"
-            title="Previous"
           >
             <SkipBack size={22} fill="currentColor" />
           </button>
@@ -156,39 +166,38 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           <button
             onClick={togglePlayPause}
             className="w-12 h-12 flex items-center justify-center bg-white text-black rounded-full shadow-xl shadow-white/10 hover:scale-110 active:scale-95 transition-all duration-300 group/play"
-            title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? (
-              <Pause size={22} fill="currentColor" className="group-hover/play:scale-110 transition-transform" />
+              <Pause size={22} fill="currentColor" />
             ) : (
-              <Play size={22} fill="currentColor" className="ml-1 group-hover/play:scale-110 transition-transform" />
+              <Play size={22} fill="currentColor" className="ml-1" />
             )}
           </button>
 
           <button
             onClick={onNext}
             className="p-1.5 text-zinc-400 hover:text-white transition-all duration-200 hover:scale-110 active:scale-90"
-            title="Next"
           >
             <SkipForward size={22} fill="currentColor" />
           </button>
 
           <button
-            onClick={() => setIsRepeat(!isRepeat)}
+            onClick={() => setIsRepeat(prev => !prev)}
             className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${isRepeat
-              ? "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]"
-              : "text-zinc-500 hover:text-zinc-300"
+                ? "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]"
+                : "text-zinc-500 hover:text-zinc-300"
               }`}
-            title="Repeat"
           >
             <Repeat size={18} strokeWidth={2.5} />
           </button>
+
         </div>
 
         <div className="w-full flex items-center gap-3">
           <span className="text-[10px] font-medium text-zinc-500 tabular-nums w-10 text-right">
             {formatTime(currentTime)}
           </span>
+
           <div
             ref={progressRef}
             onClick={handleProgressClick}
@@ -196,26 +205,27 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           >
             <div
               className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 rounded-full group-hover:h-full transition-all duration-200"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            >
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity translate-x-1/2" />
-            </div>
+              style={{ width: `${(currentTime / duration) * 100 || 0}%` }}
+            />
           </div>
+
           <span className="text-[10px] font-medium text-zinc-500 tabular-nums w-10">
             {formatTime(duration)}
           </span>
         </div>
       </div>
 
-      {/* Right: Volume & Extra */}
+      {/* Right */}
       <div className="flex items-center gap-3 w-1/3 justify-end pr-2">
+
         <button
           onClick={toggleMute}
-          className="text-zinc-400 hover:text-white transition-colors duration-200 hover:scale-110 active:scale-90"
+          className="text-zinc-400 hover:text-white transition-colors duration-200"
         >
-          {isMuted ? <VolumeX size={20} className="text-red-400" /> : <Volume2 size={20} />}
+          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
-        <div className="w-28 group/vol relative h-1.5 bg-zinc-800 rounded-full cursor-pointer">
+
+        <div className="w-28 relative h-1.5 bg-zinc-800 rounded-full">
           <input
             type="range"
             min="0"
@@ -224,15 +234,13 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
             onChange={(e) => setVolume(Number(e.target.value))}
             className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
           />
+
           <div
-            className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full group-hover/vol:bg-purple-500 transition-all duration-200"
+            className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full"
             style={{ width: `${isMuted ? 0 : volume}%` }}
           />
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover/vol:opacity-100 transition-opacity -translate-x-1/2"
-            style={{ left: `${isMuted ? 0 : volume}%` }}
-          />
         </div>
+
       </div>
 
       <audio
@@ -241,6 +249,7 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
       />
+
     </div>
   );
 }
