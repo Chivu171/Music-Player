@@ -22,9 +22,8 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
   useEffect(() => {
     if (audioRef.current && currentSong?.audioUrl) {
       audioRef.current.src = currentSong.audioUrl;
-      if (isPlaying) {
-        audioRef.current.play().catch(err => console.error("Playback error:", err));
-      }
+      setIsPlaying(true);
+      audioRef.current.play().catch(err => console.error("Playback error:", err));
 
       // Increment listen count in backend
       const incrementListen = async () => {
@@ -141,8 +140,8 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           <button
             onClick={() => setIsShuffle(!isShuffle)}
             className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${isShuffle
-                ? "text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]"
-                : "text-zinc-500 hover:text-zinc-300"
+              ? "text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]"
+              : "text-zinc-500 hover:text-zinc-300"
               }`}
             title="Shuffle"
           >
@@ -180,8 +179,8 @@ export function PlayerBar({ currentSong, onNext, onPrevious }: PlayerBarProps) {
           <button
             onClick={() => setIsRepeat(!isRepeat)}
             className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${isRepeat
-                ? "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]"
-                : "text-zinc-500 hover:text-zinc-300"
+              ? "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]"
+              : "text-zinc-500 hover:text-zinc-300"
               }`}
             title="Repeat"
           >

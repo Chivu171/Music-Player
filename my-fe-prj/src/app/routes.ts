@@ -10,6 +10,7 @@ import { Register } from "@/app/pages/Register";
 import { Admin } from "@/app/pages/Admin";
 import { Search } from "@/app/pages/Search";
 import { ArtistDetail } from "@/app/pages/ArtistDetail";
+import { AlbumDetail } from "@/app/pages/AlbumDetail";
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
       { path: "albums", Component: Albums },
       { path: "artists", Component: Artists },
       { path: "artist/:id", Component: ArtistDetail },
+      { path: "album/:id", Component: AlbumDetail },
       { path: "admin", Component: Admin },
       { path: "search", Component: Search },
     ],

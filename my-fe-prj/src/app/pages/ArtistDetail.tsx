@@ -46,7 +46,7 @@ export function ArtistDetail() {
                     title: s.title,
                     artist: s.artist?.name || artistData.name,
                     album: "Single",
-                    duration: `${Math.floor(s.duration / 60)}:${(s.duration % 60).toString().padStart(2, '0')}`,
+                    duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
                     coverUrl: s.coverUrl,
                     audioUrl: s.fileUrl
                 })));

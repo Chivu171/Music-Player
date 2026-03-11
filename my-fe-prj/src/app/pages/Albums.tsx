@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router";
+import { useOutletContext, useNavigate } from "react-router";
 import { Play, Clock, Music, Loader2 } from "lucide-react";
 import { Song } from "../data/mockData";
 
@@ -17,6 +17,7 @@ interface OutletContext {
 }
 
 export function Albums() {
+  const navigate = useNavigate();
   const { onSongSelect } = useOutletContext<OutletContext>();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,10 @@ export function Albums() {
   useEffect(() => {
     const fetchAlbums = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/playlists/albums');
+        const token = localStorage.getItem("token");
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const response = await fetch('http://localhost:8000/api/playlists/albums', { headers });
         if (!response.ok) throw new Error("Failed to fetch albums");
 
         const data = await response.json();
@@ -41,7 +45,7 @@ export function Albums() {
             title: s.title,
             artist: album.artistName,
             album: album.name,
-            duration: `${Math.floor(s.duration / 60)}:${(s.duration % 60).toString().padStart(2, '0')}`,
+            duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
             coverUrl: s.coverUrl,
             audioUrl: s.fileUrl
           }))
@@ -119,6 +123,7 @@ export function Albums() {
                 {newReleases.map((album) => (
                   <div
                     key={album.id}
+                    onClick={() => navigate(`/album/${album.id}`)}
                     className="bg-zinc-900/40 p-5 rounded-[32px] hover:bg-zinc-800/60 transition-all border border-white/5 cursor-pointer group relative"
                   >
                     <div className="relative mb-5">
@@ -128,7 +133,10 @@ export function Albums() {
                         className="w-full aspect-square object-cover rounded-[24px] shadow-2xl"
                       />
                       <button
-                        onClick={() => album.songs[0] && onSongSelect(album.songs[0])}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          album.songs[0] && onSongSelect(album.songs[0]);
+                        }}
                         className="absolute bottom-3 right-3 bg-green-500 text-black rounded-full p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-110 active:scale-95 z-10"
                       >
                         <Play size={20} fill="currentColor" />
@@ -159,6 +167,7 @@ export function Albums() {
                 {popularAlbums.slice(0, 3).map((album, index) => (
                   <div
                     key={album.id}
+                    onClick={() => navigate(`/album/${album.id}`)}
                     className="bg-gradient-to-br from-zinc-900/60 to-zinc-950/40 rounded-[40px] p-8 hover:from-zinc-800 hover:to-zinc-900 border border-white/5 transition-all cursor-pointer group"
                   >
                     <div className="flex gap-6">
@@ -184,7 +193,10 @@ export function Albums() {
                           <span>{album.songs.length} songs</span>
                         </div>
                         <button
-                          onClick={() => album.songs[0] && onSongSelect(album.songs[0])}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            album.songs[0] && onSongSelect(album.songs[0]);
+                          }}
                           className="mt-6 bg-green-500 hover:bg-green-400 text-black px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all self-start flex items-center gap-2 hover:scale-105 active:scale-95 shadow-lg shadow-green-500/10"
                         >
                           <Play size={16} fill="currentColor" />
@@ -211,6 +223,7 @@ export function Albums() {
                 {classicAlbums.map((album) => (
                   <div
                     key={album.id}
+                    onClick={() => navigate(`/album/${album.id}`)}
                     className="bg-zinc-900/40 p-5 rounded-[32px] hover:bg-zinc-800/60 transition-all border border-white/5 cursor-pointer group"
                   >
                     <div className="relative mb-5">
@@ -220,7 +233,10 @@ export function Albums() {
                         className="w-full aspect-square object-cover rounded-[24px] shadow-2xl"
                       />
                       <button
-                        onClick={() => album.songs[0] && onSongSelect(album.songs[0])}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          album.songs[0] && onSongSelect(album.songs[0]);
+                        }}
                         className="absolute bottom-3 right-3 bg-green-500 text-black rounded-full p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-xl hover:scale-110 active:scale-95"
                       >
                         <Play size={20} fill="currentColor" />
