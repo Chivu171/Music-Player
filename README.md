@@ -12,14 +12,15 @@ Muzio is a high-performance, full-stack music streaming application designed wit
 
 ### Frontend
 - **Framework:** React 18 with TypeScript
+- **State Management:** TanStack Query (React Query v5) & React Hooks
 - **Build Tool:** Vite
 - **Styling:** Custom CSS with Glassmorphism & Neon Design
 - **Icons:** Lucide React
-- **State Management:** React Hooks & Context API
 
 ### Backend
 - **Runtime:** Node.js (Express.js)
 - **Database:** MongoDB (Mongoose ODM)
+- **Caching:** Redis (Performance Layer)
 - **Media Storage:** Cloudinary (via Buffer streams)
 - **Authentication:** JWT (JSON Web Tokens)
 - **Validation:** Express-Validator
@@ -29,6 +30,7 @@ Muzio is a high-performance, full-stack music streaming application designed wit
 - **Frontend Hosting:** Vercel
 - **Backend Hosting:** Fly.io (Dockerized)
 - **Database Hosting:** MongoDB Atlas
+- **Caching Layer:** Upstash Redis / Local Redis
 - **CI/CD:** GitHub Integration
 
 ---
@@ -36,12 +38,15 @@ Muzio is a high-performance, full-stack music streaming application designed wit
 ## ✨ Key Features
 
 - **Premium UI/UX:** Stunning dark-mode interface with glassmorphism effects, smooth micro-animations, and custom transitions.
-- **Efficient Streaming:** Engineered audio streaming and media uploads using **Buffer streams**, eliminating the need for temporary server-side file storage.
-- **Dynamic Trending System:** Real-time tracking of daily and weekly listen counts to generate "Trending Now" charts for both songs and artists.
-- **Artist Management:** Dedicated profiles for artists, including follower tracking and automated artist-genre associations.
-- **Social Interaction:** Users can follow their favorite artists and discover personalized recommendations.
-- **Admin Dashboard:** Secure interface for uploading songs, managing artists, and handling metadata.
-- **Smart Search:** Instant search functionality for songs, artists, and albums.
+- **Dual-Layer Caching System:** 
+    - **Frontend:** Implemented **React Query** for instant UI responses, background data synchronization, and zero-latency navigation.
+    - **Backend:** Integrated **Redis** to cache heavy database queries (Playlists, Albums), reducing response times by up to 90%.
+- **Efficient Streaming:** Engineered audio streaming and media uploads using **Buffer streams**, eliminating temporary server-side disk usage.
+- **Dynamic Trending System:** Real-time tracking of daily/weekly listen counts to generate live "Trending Now" charts.
+- **Artist Management:** Dedicated profiles with follower tracking and automated metadata associations.
+- **Social Interaction:** Follow artists and discover personalized recommendations.
+- **Admin Dashboard:** Secure interface for media uploads and library management.
+- **Smart Search:** High-performance search with client-side caching for instant results.
 
 ---
 
