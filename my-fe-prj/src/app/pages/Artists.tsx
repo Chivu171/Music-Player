@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { API_URL } from "../apiConfig";
 import { useQuery } from "@tanstack/react-query";
 import { useOutletContext, useNavigate } from "react-router";
@@ -5,7 +6,7 @@ import { Play, UserCheck, Music2, Loader2 } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
 
 interface OutletContext {
-  onSongSelect: (song: Song) => void;
+  onSongSelect: (song: Song, playlist?: Song[]) => void;
 }
 
 const mapArtist = (a: any): Artist => ({
@@ -23,7 +24,9 @@ const mapSong = (s: any): Song => ({
   title: s.title,
   artist: s.artist?.name || "Unknown Artist",
   album: "Single",
-  duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60)
+  duration: `${Math.floor(s.duration / 60)}:${Math.floor(
+    s.duration % 60
+  )
     .toString()
     .padStart(2, "0")}`,
   coverUrl: s.coverUrl,
@@ -75,22 +78,26 @@ export function Artists() {
   const { data: trendingArtists = [], isLoading: trendingLoading } = useQuery({
     queryKey: ["trendingArtists"],
     queryFn: fetchTrendingArtists,
+    staleTime: 1000 * 60 * 10,
   });
 
   const { data: allArtists = [], isLoading: allLoading } = useQuery({
     queryKey: ["allArtists"],
     queryFn: fetchAllArtists,
+    staleTime: 1000 * 60 * 30,
   });
 
   const { data: popularTracks = [], isLoading: popularLoading } = useQuery({
     queryKey: ["popularTracks"],
     queryFn: fetchPopularTracks,
+    staleTime: 1000 * 60 * 5,
   });
 
-  const { data: followedArtists = new Set<string>(), refetch } = useQuery({
-    queryKey: ["followedArtists"],
-    queryFn: fetchFollowedArtists,
-  });
+  const { data: followedArtists = new Set<string>(), refetch: refetchFollowed } =
+    useQuery({
+      queryKey: ["followedArtists"],
+      queryFn: fetchFollowedArtists,
+    });
 
   const loading = trendingLoading || allLoading || popularLoading;
 
@@ -99,198 +106,194 @@ export function Artists() {
 
     if (followedArtists.has(artistId)) return;
 
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      navigate("/login");
-      return;
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/auth/follow/${artistId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        refetchFollowed();
+      }
+    } catch (error) {
+      console.error("Failed to follow artist:", error);
     }
-
-    await fetch(`${API_URL}/auth/follow/${artistId}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    refetch();
   };
 
-  const playArtistSongs = async (artistId: string) => {
+  const playArtist = async (artistId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
     try {
       const songs = await fetchSongsByArtist(artistId);
+
       if (songs.length > 0) {
-        onSongSelect(songs[0]);
+        onSongSelect(songs[0], songs);
       }
-    } catch (err) {
-      console.error("Failed to play artist songs", err);
+    } catch (error) {
+      console.error("Failed to load artist songs", error);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[400px]">
-        <Loader2 className="animate-spin text-green-500" size={40} />
+      <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
+        <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
       </div>
     );
   }
 
   const spotlightArtists = trendingArtists.slice(0, 3);
+  const weeklyTrending = trendingArtists.slice(0, 6);
 
   return (
-    <div className="p-6 space-y-12">
-
-      {/* HERO */}
-      <div className="relative h-80 rounded-xl overflow-hidden">
+    <div className="p-6">
+      {/* Hero */}
+      <div className="relative h-80 rounded-lg overflow-hidden mb-8 shadow-2xl">
         <img
           src="https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=1200"
+          alt="Artists"
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-0 p-8">
-          <h1 className="text-5xl font-bold text-white">Artists</h1>
-          <p className="text-zinc-300">
-            Discover trending artists and top releases
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-black/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 p-8">
+          <div className="flex items-center gap-2 mb-2">
+            <Music2 size={24} className="text-green-500" />
+            <span className="text-sm uppercase tracking-widest text-zinc-300 font-medium">
+              Discover
+            </span>
+          </div>
+
+          <h1 className="text-6xl font-bold text-white mb-4 tracking-tight">
+            Artists
+          </h1>
+
+          <p className="text-zinc-200 text-lg max-w-xl">
+            Follow your favorite artists and discover new ones tailored just
+            for you.
           </p>
         </div>
       </div>
 
-      {/* SPOTLIGHT */}
-      <section>
-        <h2 className="text-3xl text-white font-bold mb-6">
-          Top Artists This Month
-        </h2>
+      {/* Spotlight */}
+      {spotlightArtists.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-3xl font-bold text-white mb-6">
+            Top Artists This Month
+          </h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {spotlightArtists.map((artist) => (
-            <div
-              key={artist.id}
-              onClick={() => navigate(`/artist/${artist.id}`)}
-              className="bg-zinc-900 rounded-xl p-6 cursor-pointer hover:bg-zinc-800 transition"
-            >
-              <img
-                src={artist.imageUrl}
-                className="w-40 h-40 mx-auto rounded-full object-cover"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {spotlightArtists.map((artist, index) => (
+              <div
+                key={artist.id}
+                onClick={() => navigate(`/artist/${artist.id}`)}
+                className="relative bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden hover:scale-[1.03] transition-all duration-300 cursor-pointer group border border-white/5 shadow-xl"
+              >
+                <div className="relative p-8">
+                  <div className="absolute top-4 right-4 bg-yellow-500 text-black rounded-full w-10 h-10 flex items-center justify-center text-lg font-black">
+                    {index + 1}
+                  </div>
+
+                  <div className="flex flex-col items-center text-center pt-4">
+                    <img
+                      src={artist.imageUrl}
+                      alt={artist.name}
+                      className="w-40 h-40 rounded-full object-cover mb-6"
+                    />
+
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      {artist.name}
+                    </h3>
+
+                    <p className="text-zinc-400 mb-6">{artist.genre}</p>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={(e) => playArtist(artist.id, e)}
+                        className="bg-white text-black px-6 py-2.5 rounded-full font-bold flex items-center gap-2"
+                      >
+                        <Play size={16} fill="currentColor" />
+                        Play
+                      </button>
+
+                      <button
+                        onClick={(e) => handleFollow(artist.id, e)}
+                        disabled={followedArtists.has(artist.id)}
+                        className={`px-6 py-2.5 rounded-full font-bold border ${followedArtists.has(artist.id)
+                            ? "bg-white text-black"
+                            : "bg-zinc-800 text-white"
+                          }`}
+                      >
+                        {followedArtists.has(artist.id)
+                          ? "Following"
+                          : "Follow"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Popular Tracks */}
+      {popularTracks.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-3xl font-bold text-white mb-8">Top Releases</h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {popularTracks.map((song, index) => (
+              <TrackItem
+                key={song.id}
+                song={song}
+                index={index + 1}
+                onSongSelect={onSongSelect}
               />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
 
-              <h3 className="text-xl text-white mt-4 text-center font-bold">
-                {artist.name}
-              </h3>
+function TrackItem({
+  song,
+  index,
+  onSongSelect,
+}: {
+  song: Song;
+  index: number;
+  onSongSelect: (song: Song) => void;
+}) {
+  return (
+    <div
+      onClick={() => onSongSelect(song)}
+      className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-white/[0.03] transition-all duration-300 cursor-pointer"
+    >
+      <span className="text-2xl font-black text-zinc-700 w-8">
+        {index.toString().padStart(2, "0")}
+      </span>
 
-              <p className="text-zinc-400 text-center">{artist.genre}</p>
+      <img
+        src={song.coverUrl}
+        alt={song.title}
+        className="w-16 h-16 rounded-xl object-cover"
+      />
 
-              <div className="flex gap-3 justify-center mt-4">
+      <div className="flex-1">
+        <h4 className="text-white font-bold truncate">{song.title}</h4>
+        <p className="text-zinc-400 text-sm truncate">{song.artist}</p>
+      </div>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    playArtistSongs(artist.id);
-                  }}
-                  className="bg-white text-black px-4 py-2 rounded-full flex items-center gap-2"
-                >
-                  <Play size={16} fill="currentColor" />
-                  Play
-                </button>
-
-                <button
-                  onClick={(e) => handleFollow(artist.id, e)}
-                  className="border px-4 py-2 rounded-full text-white"
-                >
-                  {followedArtists.has(artist.id)
-                    ? "Following"
-                    : "Follow"}
-                </button>
-
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ALL ARTISTS */}
-      <section>
-        <h2 className="text-2xl text-white font-bold mb-6">
-          All Artists
-        </h2>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-
-          {allArtists.map((artist) => (
-            <div
-              key={artist.id}
-              onClick={() => navigate(`/artist/${artist.id}`)}
-              className="bg-zinc-900 p-4 rounded-xl cursor-pointer hover:bg-zinc-800 transition"
-            >
-              <div className="relative">
-
-                <img
-                  src={artist.imageUrl}
-                  className="rounded-full aspect-square object-cover"
-                />
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    playArtistSongs(artist.id);
-                  }}
-                  className="absolute bottom-0 right-0 bg-green-500 p-3 rounded-full"
-                >
-                  <Play size={18} fill="currentColor" />
-                </button>
-
-              </div>
-
-              <h3 className="text-white mt-3 text-center font-semibold">
-                {artist.name}
-              </h3>
-
-              <p className="text-zinc-500 text-xs text-center">
-                {artist.genre}
-              </p>
-            </div>
-          ))}
-
-        </div>
-      </section>
-
-      {/* TOP TRACKS */}
-      <section>
-        <h2 className="text-2xl text-white font-bold mb-6">
-          Top Releases
-        </h2>
-
-        <div className="space-y-2">
-
-          {popularTracks.map((song, index) => (
-            <div
-              key={song.id}
-              onClick={() => onSongSelect(song)}
-              className="flex items-center gap-4 p-4 hover:bg-zinc-900 rounded-lg cursor-pointer"
-            >
-              <span className="text-zinc-500 w-6">{index + 1}</span>
-
-              <img
-                src={song.coverUrl}
-                className="w-14 h-14 rounded-lg object-cover"
-              />
-
-              <div className="flex-1">
-                <h4 className="text-white font-semibold">
-                  {song.title}
-                </h4>
-
-                <p className="text-zinc-400 text-sm">
-                  {song.artist}
-                </p>
-              </div>
-
-              <span className="text-zinc-500 text-sm">
-                {song.duration}
-              </span>
-
-            </div>
-          ))}
-
-        </div>
-      </section>
-
+      <span className="text-sm text-zinc-500">{song.duration}</span>
     </div>
   );
 }
