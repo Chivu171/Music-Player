@@ -1,6 +1,7 @@
 const PlayList = require('./playlist.model');
 const Song = require('../song/song.model');
 const User = require('../auth/auth.model');
+const { getOrSetCache, clearCache } = require('../../shared/utils/cache');
 
 
 const createUserPlaylist = async (playListData, userID) => {
@@ -71,11 +72,13 @@ const createPopularToday = async (systemAdminID) => {
 };*/
 
 const getPlayListByID = async (playListID) => {
-  const playList = await PlayList.findById(playListID).populate('songs');
-  if (!playList) {
-    throw new Error('Không tìm thấy Playlist!');
-  }
-  return playList;
+  return await getOrSetCache(`playlist:${playListID}`, async () => {
+    const playList = await PlayList.findById(playListID).populate('songs');
+    if (!playList) {
+      throw new Error('Không tìm thấy Playlist!');
+    }
+    return playList;
+  });
 };
 const updatePlayList = async (playlistId, updateData, userID) => {
   const playlist = await PlayList.findById(playlistId);
@@ -85,7 +88,12 @@ const updatePlayList = async (playlistId, updateData, userID) => {
   if (playlist.createdBy.toString() !== userID.toString()) {
     throw new Error('Bạn không có quyền chỉnh sửa Playlist này.');
   }
-  return await PlayList.findByIdAndUpdate(playlistId, updateData, { new: true });
+  const updatedPlaylist = await PlayList.findByIdAndUpdate(playlistId, updateData, { new: true });
+  await clearCache(`playlist:${playlistId}`);
+  if (playlist.type === 'album') {
+    await clearCache('all_albums');
+  }
+  return updatedPlaylist;
 };
 const deletePlayList = async (playlistId, userID) => {
   const playlist = await PlayList.findById(playlistId);
@@ -93,12 +101,19 @@ const deletePlayList = async (playlistId, userID) => {
   if (playlist.createdBy.toString() !== userID.toString()) {
     throw new Error('Bạn không có quyền xóa Playlist này.');
   }
-  return await PlayList.findByIdAndDelete(playlistId);
+  const deletedPlaylist = await PlayList.findByIdAndDelete(playlistId);
+  await clearCache(`playlist:${playlistId}`);
+  if (playlist.type === 'album') {
+    await clearCache('all_albums');
+  }
+  return deletedPlaylist;
 };
 //cho trang kham pha
 // Lấy tất cả album
 const getAllAlbums = async () => {
-  return await PlayList.find({ type: 'album' }).populate('songs');
+  return await getOrSetCache('all_albums', async () => {
+    return await PlayList.find({ type: 'album' }).populate('songs');
+  });
 };
 
 // Lấy album theo tên nghệ sĩ

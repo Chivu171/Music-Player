@@ -13,6 +13,8 @@ const port = process.env.PORT || 8000;
 // Initialize Scheduled Tasks (Cron Jobs)
 const { initCronJobs } = require('./src/infrastructure/config/cron');
 initCronJobs();
+const { connectRedis } = require('./src/infrastructure/config/redis');
+connectRedis();
 
 // Swagger documentation
 const swaggerUi = require('swagger-ui-express');
