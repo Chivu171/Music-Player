@@ -137,7 +137,6 @@ export function Trending() {
               <tr className="text-left border-b border-white/5 bg-zinc-900/40">
                 <th className="p-6 text-zinc-500 text-xs font-black uppercase tracking-widest w-16 text-center">#</th>
                 <th className="p-6 text-zinc-500 text-xs font-black uppercase tracking-widest">Track</th>
-                <th className="p-6 text-zinc-500 text-xs font-black uppercase tracking-widest hidden md:table-cell">Album</th>
                 <th className="p-6 text-zinc-500 text-xs font-black uppercase tracking-widest text-center">Activity</th>
                 <th className="p-6 text-zinc-500 text-xs font-black uppercase tracking-widest text-right">Time</th>
               </tr>
@@ -166,7 +165,6 @@ export function Trending() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-6 text-zinc-400 font-bold hidden md:table-cell">{song.album}</td>
                   <td className="p-6 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-800 rounded-full text-xs font-black text-zinc-300">
                       <TrendingUp size={12} className="text-green-500" />

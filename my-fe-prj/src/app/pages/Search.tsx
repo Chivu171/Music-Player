@@ -3,6 +3,7 @@ import { API_URL } from "../apiConfig";
 import { Loader2, Play, Search as SearchIcon } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
 import { useQuery } from "@tanstack/react-query";
+import React, { useMemo } from "react";
 
 interface OutletContext {
     onSongSelect: (song: Song) => void;
@@ -48,15 +49,17 @@ export function Search() {
     const navigate = useNavigate();
     const { onSongSelect } = useOutletContext<OutletContext>();
 
-    const { data, isLoading: loading } = useQuery({
+    const { data, isLoading: loading, isError } = useQuery({
         queryKey: ["search", query],
         queryFn: () => fetchSearchResults(query),
         enabled: !!query.trim(),
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
-    const songs = data?.songs || [];
-    const artists = data?.artists || [];
+    const { songs, artists } = useMemo(() => ({
+        songs: data?.songs || [],
+        artists: data?.artists || []
+    }), [data]);
 
     if (!query) {
         return (
@@ -72,6 +75,15 @@ export function Search() {
         return (
             <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
                 <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-160px)] text-zinc-400">
+                <h2 className="text-2xl font-bold text-white mb-2">Something went wrong</h2>
+                <p>Failed to fetch search results. Please try again later.</p>
             </div>
         );
     }

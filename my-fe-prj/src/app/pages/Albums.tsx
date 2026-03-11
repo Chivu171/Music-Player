@@ -30,15 +30,15 @@ const fetchAlbums = async (): Promise<Album[]> => {
     id: album._id,
     title: album.name,
     artist: album.artistName || "Unknown Artist",
-    year: new Date(album.createdAt).getFullYear(),
+    year: album.createdAt ? new Date(album.createdAt).getFullYear() : 2024,
     coverUrl: album.thumbnail || "https://marketplace.canva.com/EAFiB-8g3-E/1/0/1600w/canva-black-minimalist-vinyl-record-album-cover-gBwZOS_0A_w.jpg",
-    songs: album.songs.map((s: any) => ({
+    songs: (album.songs || []).map((s: any) => ({
       id: s._id,
       title: s.title,
-      artist: album.artistName,
+      artist: album.artistName || "Unknown Artist",
       album: album.name,
-      duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
-      coverUrl: s.coverUrl,
+      duration: s.duration ? `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}` : "0:00",
+      coverUrl: s.coverUrl || "https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png",
       audioUrl: s.fileUrl
     }))
   }));
@@ -48,20 +48,44 @@ export function Albums() {
   const navigate = useNavigate();
   const { onSongSelect } = useOutletContext<OutletContext>();
 
-  const { data: albums = [], isLoading: loading } = useQuery({
+  const { data: albums = [], isLoading: loading, isError } = useQuery({
     queryKey: ["albums"],
     queryFn: fetchAlbums,
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
-  const newReleases = albums.filter((album) => album.year >= 2024);
-  const popularAlbums = [...albums].sort(() => Math.random() - 0.5);
-  const classicAlbums = albums.filter((album) => album.year <= 2023);
+  const { newReleases, popularAlbums, classicAlbums } = useMemo(() => {
+    if (!albums || albums.length === 0) return { newReleases: [], popularAlbums: [], classicAlbums: [] };
+
+    return {
+      newReleases: albums.filter((album) => album.year >= 2024),
+      popularAlbums: [...albums].sort(() => 0.5 - Math.random()).slice(0, 3),
+      classicAlbums: albums.filter((album) => album.year < 2024)
+    };
+  }, [albums]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
         <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-160px)] text-center px-4">
+        <div className="bg-red-500/10 p-6 rounded-[32px] mb-6">
+          <Music size={48} className="text-red-500 opacity-50" />
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-2">Failed to load albums</h3>
+        <p className="text-zinc-500 max-w-md">There was an issue connecting to the server. Please check your connection or try again later.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-8 bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform"
+        >
+          Retry
+        </button>
       </div>
     );
   }
