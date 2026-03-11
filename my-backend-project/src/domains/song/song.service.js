@@ -2,19 +2,22 @@ const Song = require('./song.model');
 const Artist = require('../artist/artist.model');
 const Genre = require('../genre/genre.model');
 const cloudinary = require('../../infrastructure/config/cloudinary');
+const { getOrSetCache, clearCache } = require('../../shared/utils/cache');
 
 const getAllSong = async (page = 1, limit = 10) => {
-  const skip = (page - 1) * limit;
-  const songs = await Song.find()
-    .populate(['artist', 'genre'])
-    .skip(skip)
-    .limit(limit);
-  const total = await Song.countDocuments();
+  return await getOrSetCache(`songs:all:${page}:${limit}`, async () => {
+    const skip = (page - 1) * limit;
+    const songs = await Song.find()
+      .populate(['artist', 'genre'])
+      .skip(skip)
+      .limit(limit);
+    const total = await Song.countDocuments();
 
-  if (!songs || songs.length === 0) {
-    throw new Error('Song not found');
-  }
-  return { songs, total, page, totalPages: Math.ceil(total / limit) };
+    if (!songs || songs.length === 0) {
+      throw new Error('Song not found');
+    }
+    return { songs, total, page, totalPages: Math.ceil(total / limit) };
+  });
 }
 
 const incrementListenCount = async (songId) => {
@@ -31,19 +34,23 @@ const incrementListenCount = async (songId) => {
 }
 
 const getPopularSongs = async (limit = 10) => {
-  const songs = await Song.find()
-    .sort({ totalListen: -1 })
-    .limit(limit)
-    .populate(['artist', 'genre']);
-  return songs;
+  return await getOrSetCache(`songs:popular:${limit}`, async () => {
+    const songs = await Song.find()
+      .sort({ totalListen: -1 })
+      .limit(limit)
+      .populate(['artist', 'genre']);
+    return songs;
+  });
 }
 
 const getTrendingSongs = async (limit = 10) => {
-  const songs = await Song.find()
-    .sort({ weeklyListen: -1 })
-    .limit(limit)
-    .populate(['artist', 'genre']);
-  return songs;
+  return await getOrSetCache(`songs:trending:${limit}`, async () => {
+    const songs = await Song.find()
+      .sort({ weeklyListen: -1 })
+      .limit(limit)
+      .populate(['artist', 'genre']);
+    return songs;
+  });
 }
 
 const searchSongsByGenre = async (genreName) => {
@@ -77,11 +84,13 @@ const searchSongs = async (query) => {
 }
 
 const getDetailSongs = async (songId) => {
-  const song = await Song.findById(songId).populate(['artist', 'genre']);
-  if (!song) {
-    throw new Error('Song not found');
-  }
-  return song;
+  return await getOrSetCache(`songs:detail:${songId}`, async () => {
+    const song = await Song.findById(songId).populate(['artist', 'genre']);
+    if (!song) {
+      throw new Error('Song not found');
+    }
+    return song;
+  });
 }
 
 const deleteSong = async (songId) => {
@@ -99,6 +108,12 @@ const deleteSong = async (songId) => {
   }
 
   await Song.findByIdAndDelete(songId);
+
+  // Clear related caches
+  await clearCache(`songs:detail:${songId}`);
+  await clearCache('songs:all:*'); // Use wildcard if supported, otherwise just clear what's predictable
+  await clearCache('songs:popular:*');
+  await clearCache('songs:trending:*');
 
   return { message: 'Song deleted successfully from DB and Cloudinary' };
 }

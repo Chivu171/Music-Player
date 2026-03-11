@@ -1,54 +1,68 @@
-const Artist = require('./artist.model');
 const Song = require('../song/song.model');
+const { getOrSetCache, clearCache } = require('../../shared/utils/cache');
 
 const getAllArtists = async () => {
-    return await Artist.find();
+    return await getOrSetCache('artists:all', async () => {
+        return await Artist.find();
+    });
 };
 
 const getArtistById = async (id) => {
-    const artist = await Artist.findById(id);
-    if (!artist) throw new Error('Artist not found');
-    return artist;
+    return await getOrSetCache(`artists:detail:${id}`, async () => {
+        const artist = await Artist.findById(id);
+        if (!artist) throw new Error('Artist not found');
+        return artist;
+    });
 };
 
 const createArtist = async (artistData) => {
     const newArtist = new Artist(artistData);
-    return await newArtist.save();
+    const savedArtist = await newArtist.save();
+    await clearCache('artists:all');
+    return savedArtist;
 };
 
 const updateArtist = async (id, updateData) => {
-    return await Artist.findByIdAndUpdate(id, updateData, { new: true });
+    const updated = await Artist.findByIdAndUpdate(id, updateData, { new: true });
+    await clearCache(`artists:detail:${id}`);
+    await clearCache('artists:all');
+    return updated;
 };
 
 const deleteArtist = async (id) => {
-    return await Artist.findByIdAndDelete(id);
+    const deleted = await Artist.findByIdAndDelete(id);
+    await clearCache(`artists:detail:${id}`);
+    await clearCache('artists:all');
+    return deleted;
 };
 
 const getTrendingArtists = async (limit = 10) => {
-    const trending = await Song.aggregate([
-        {
-            $group: {
-                _id: "$artist",
-                weeklyListenCount: { $sum: "$weeklyListen" }
-            }
-        },
-        { $sort: { weeklyListenCount: -1 } },
-        { $limit: limit },
-        {
-            $lookup: {
-                from: "artists",
-                localField: "_id",
-                foreignField: "_id",
-                as: "artistDetails"
-            }
-        },
-        { $unwind: "$artistDetails" }
-    ]);
-    return trending.map(t => ({
-        ...t.artistDetails,
-        weeklyListenCount: t.weeklyListenCount,
-        id: t.artistDetails._id
-    }));
+    return await getOrSetCache(`artists:trending:${limit}`, async () => {
+        const trending = await Song.aggregate([
+            {
+                $group: {
+                    _id: "$artist",
+                    weeklyListenCount: { $sum: "$weeklyListen" }
+                }
+            },
+            { $sort: { weeklyListenCount: -1 } },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: "artists",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "artistDetails"
+                }
+            },
+            { $unwind: "$artistDetails" }
+        ]);
+        return trending.map(t => ({
+            ...t.artistDetails,
+            weeklyListenCount: t.weeklyListenCount,
+            id: t.artistDetails._id
+        }));
+    });
 };
 
 const incrementFollower = async (id) => {
