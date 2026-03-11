@@ -7,7 +7,7 @@ import { mockSongs, Song } from "../data/mockData";
 import { useQuery } from "@tanstack/react-query";
 
 interface OutletContext {
-  onSongSelect: (song: Song) => void;
+  onSongSelect: (song: Song, songs: Song[]) => void;
 }
 
 const fetchSongs = async (): Promise<Song[]> => {
@@ -127,7 +127,7 @@ export function Home() {
             {featuredSongs.map((song) => (
               <button
                 key={song.id}
-                onClick={() => onSongSelect(song)}
+                onClick={() => onSongSelect(song, featuredSongs)}
                 className="bg-zinc-800/50 rounded flex items-center gap-4 hover:bg-zinc-700/50 transition-all group overflow-hidden"
               >
                 <img
@@ -156,7 +156,8 @@ export function Home() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {recentlyPlayed.length > 0 ? (
             recentlyPlayed.map((song) => (
-              <SongCard key={song.id} song={song} onPlay={onSongSelect} />
+              <SongCard key={song.id} song={song} onPlay={(song) => onSongSelect(song, recentlyPlayed)}
+              />
             ))
           ) : (
             <div className="col-span-full h-40 flex items-center justify-center bg-zinc-800/20 rounded-xl border border-white/5 text-zinc-500 text-sm">
@@ -175,7 +176,8 @@ export function Home() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {mockSongs.map((song) => (
-            <SongCard key={song.id} song={song} onPlay={onSongSelect} />
+            <SongCard key={song.id} song={song} onPlay={(song) => onSongSelect(song, mockSongs)}
+            />
           ))}
         </div>
       </section>
