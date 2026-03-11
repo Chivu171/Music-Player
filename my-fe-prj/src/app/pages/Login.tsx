@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { API_URL } from "../apiConfig";
 import { Link, useNavigate } from "react-router";
 import { Music2, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import logo from "../assets/logo.jpg";
 
 export function Login() {
     const [email, setEmail] = useState("");
@@ -58,7 +59,7 @@ export function Login() {
                 <div className="bg-zinc-900/50 backdrop-blur-2xl border border-white/5 rounded-[32px] p-10 shadow-2xl">
                     <div className="flex flex-col items-center mb-10">
                         <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-2xl shadow-green-500/20 mb-8 border border-white/10 ring-4 ring-zinc-900">
-                            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <h1 className="text-4xl text-white font-black tracking-tight mb-2">Welcome Back</h1>
                         <p className="text-zinc-400 font-medium tracking-wide">Continue your musical journey</p>
