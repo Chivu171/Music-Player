@@ -25,7 +25,9 @@ const createAlbum = async (albumData, adminID, thumbnailUrl = null) => {
     createdBy: adminID,
     ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
   });
-  return await newAlbum.save();
+  const savedAlbum = await newAlbum.save();
+  await clearCache('all_albums');
+  return savedAlbum;
 };
 
 
@@ -143,7 +145,12 @@ const addSongToPlayList = async (playlistId, songId, userID) => {
     throw new Error('Bài hát đã tồn tại trong Playlist.');
   }
   playlist.songs.push(songId);
-  return await playlist.save();
+  const savedPlaylist = await playlist.save();
+  await clearCache(`playlist:${playlistId}`);
+  if (playlist.type === 'album') {
+    await clearCache('all_albums');
+  }
+  return savedPlaylist;
 };
 
 const removeSongFromPlaylist = async (playlistId, songId, userID) => {
@@ -158,7 +165,12 @@ const removeSongFromPlaylist = async (playlistId, songId, userID) => {
   }
 
   playlist.songs.pull(songId);
-  return await playlist.save();
+  const savedPlaylist = await playlist.save();
+  await clearCache(`playlist:${playlistId}`);
+  if (playlist.type === 'album') {
+    await clearCache('all_albums');
+  }
+  return savedPlaylist;
 };
 
 const getUserPlaylist = async (userID) => {
