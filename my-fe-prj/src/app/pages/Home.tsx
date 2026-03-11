@@ -1,44 +1,41 @@
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { API_URL } from "../apiConfig";
 import { Sunrise, Sun, Moon } from "lucide-react";
 import { useOutletContext } from "react-router";
 import { SongCard } from "../components/SongCard";
 import { mockSongs, Song } from "../data/mockData";
+import { useQuery } from "@tanstack/react-query";
 
 interface OutletContext {
   onSongSelect: (song: Song) => void;
 }
 
+const fetchSongs = async (): Promise<Song[]> => {
+  const response = await fetch(`${API_URL}/songs/getsongs?page=1&limit=12`);
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  const data = await response.json();
+
+  return (data.songs || []).map((s: any) => ({
+    id: s._id,
+    title: s.title,
+    artist: typeof s.artist === 'object' ? s.artist.name : (s.artist || "Unknown Artist"),
+    album: s.album || "Single",
+    duration: s.duration ? `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}` : "0:00",
+    coverUrl: s.coverUrl || "https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png",
+    audioUrl: s.fileUrl
+  }));
+};
+
 export function Home() {
   const { onSongSelect } = useOutletContext<OutletContext>();
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const response = await fetch(`${API_URL}/songs/getsongs?page=1&limit=12`);
-        const data = await response.json();
-
-        const mappedSongs: Song[] = (data.songs || []).map((s: any) => ({
-          id: s._id,
-          title: s.title,
-          artist: typeof s.artist === 'object' ? s.artist.name : (s.artist || "Unknown Artist"),
-          album: s.album || "Single",
-          duration: s.duration ? `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}` : "0:00",
-          coverUrl: s.coverUrl || "https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png",
-          audioUrl: s.fileUrl
-        }));
-
-        setSongs(mappedSongs);
-      } catch (err) {
-        console.error("Failed to fetch songs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSongs();
-  }, []);
+  const { data: songs = [], isLoading: loading } = useQuery<Song[]>({
+    queryKey: ["songs"],
+    queryFn: fetchSongs,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const { text: greeting, subtext: greetingSubtext, icon: greetingIcon } = useMemo(() => {
     const hour = new Date().getHours();

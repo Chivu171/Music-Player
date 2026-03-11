@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { API_URL } from "../apiConfig";
+import { useQuery } from "@tanstack/react-query";
 import { useOutletContext } from "react-router";
 import { TrendingUp, Play, Heart, MoreHorizontal, Loader2, Music2, User as UserIcon } from "lucide-react";
 import { Song } from "../data/mockData";
@@ -15,45 +15,40 @@ interface TrendingArtist {
   weeklyListenCount: number;
 }
 
+const fetchTrendingData = async () => {
+  const [songsRes, artistsRes] = await Promise.all([
+    fetch(`${API_URL}/songs/trending?limit=10`),
+    fetch(`${API_URL}/artists/trending?limit=6`)
+  ]);
+
+  const songsData = await songsRes.json();
+  const artistsData = await artistsRes.json();
+
+  const mappedSongs: Song[] = (songsData || []).map((s: any) => ({
+    id: s._id,
+    title: s.title,
+    artist: typeof s.artist === 'object' ? s.artist.name : (s.artist || "Unknown Artist"),
+    album: s.album || "Single",
+    duration: s.duration ? `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}` : "0:00",
+    coverUrl: s.coverUrl || "https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png",
+    audioUrl: s.fileUrl,
+    weeklyListen: s.weeklyListen || 0
+  }));
+
+  return { songs: mappedSongs, artists: artistsData || [] };
+};
+
 export function Trending() {
   const { onSongSelect } = useOutletContext<OutletContext>();
-  const [trendingSongs, setTrendingSongs] = useState<Song[]>([]);
-  const [trendingArtists, setTrendingArtists] = useState<TrendingArtist[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [songsRes, artistsRes] = await Promise.all([
-          fetch(`${API_URL}/songs/trending?limit=10`),
-          fetch(`${API_URL}/artists/trending?limit=6`)
-        ]);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["trending"],
+    queryFn: fetchTrendingData,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
 
-        const songsData = await songsRes.json();
-        const artistsData = await artistsRes.json();
-
-        const mappedSongs: Song[] = (songsData || []).map((s: any) => ({
-          id: s._id,
-          title: s.title,
-          artist: typeof s.artist === 'object' ? s.artist.name : (s.artist || "Unknown Artist"),
-          album: s.album || "Single",
-          duration: s.duration ? `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}` : "0:00",
-          coverUrl: s.coverUrl || "https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png",
-          audioUrl: s.fileUrl,
-          weeklyListen: s.weeklyListen || 0
-        }));
-
-        setTrendingSongs(mappedSongs);
-        setTrendingArtists(artistsData || []);
-      } catch (err) {
-        console.error("Failed to fetch trending data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const trendingSongs = data?.songs || [];
+  const trendingArtists = data?.artists || [];
 
   if (loading) {
     return (
@@ -198,7 +193,7 @@ export function Trending() {
           <h2 className="text-3xl font-black text-white tracking-tight italic">Top Creators</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {trendingArtists.map((artist) => (
+          {trendingArtists.map((artist: TrendingArtist) => (
             <div
               key={artist._id}
               className="group bg-zinc-900/40 border border-white/5 p-6 rounded-[32px] hover:bg-zinc-800/60 transition-all cursor-pointer text-center relative overflow-hidden"

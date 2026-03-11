@@ -1,12 +1,46 @@
 import { useNavigate, useSearchParams, useOutletContext } from "react-router";
-import { useState, useEffect } from "react";
 import { API_URL } from "../apiConfig";
 import { Loader2, Play, Search as SearchIcon } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
+import { useQuery } from "@tanstack/react-query";
 
 interface OutletContext {
     onSongSelect: (song: Song) => void;
 }
+
+const fetchSearchResults = async (query: string): Promise<{ songs: Song[], artists: Artist[] }> => {
+    if (!query.trim()) return { songs: [], artists: [] };
+
+    const res = await fetch(`${API_URL}/songs/search?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+
+    const songs: Song[] = data.map((s: any) => ({
+        id: s._id,
+        title: s.title,
+        artist: s.artist?.name || "Unknown Artist",
+        album: "Single",
+        duration: `${Math.floor(s.duration / 60)}:${(s.duration % 60).toString().padStart(2, '0')}`,
+        coverUrl: s.coverUrl,
+        audioUrl: s.fileUrl
+    }));
+
+    const uniqueArtistsIds = new Set();
+    const artists: Artist[] = [];
+    data.forEach((s: any) => {
+        if (s.artist && !uniqueArtistsIds.has(s.artist._id)) {
+            uniqueArtistsIds.add(s.artist._id);
+            artists.push({
+                id: s.artist._id,
+                name: s.artist.name,
+                imageUrl: s.artist.imageUrl || 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-artist.png',
+                genre: s.artist.genre || 'Artist',
+                followers: s.artist.followers?.toString() || '0'
+            });
+        }
+    });
+
+    return { songs, artists };
+};
 
 export function Search() {
     const [searchParams] = useSearchParams();
@@ -14,55 +48,15 @@ export function Search() {
     const navigate = useNavigate();
     const { onSongSelect } = useOutletContext<OutletContext>();
 
-    const [loading, setLoading] = useState(false);
-    const [songs, setSongs] = useState<Song[]>([]);
-    const [artists, setArtists] = useState<Artist[]>([]);
+    const { data, isLoading: loading } = useQuery({
+        queryKey: ["search", query],
+        queryFn: () => fetchSearchResults(query),
+        enabled: !!query.trim(),
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
-    useEffect(() => {
-        const fetchResults = async () => {
-            if (!query.trim()) return;
-
-            setLoading(true);
-            try {
-                const res = await fetch(`${API_URL}/songs/search?q=${encodeURIComponent(query)}`);
-                const data = await res.json();
-
-                const mappedSongs: Song[] = data.map((s: any) => ({
-                    id: s._id,
-                    title: s.title,
-                    artist: s.artist?.name || "Unknown Artist",
-                    album: "Single",
-                    duration: `${Math.floor(s.duration / 60)}:${(s.duration % 60).toString().padStart(2, '0')}`,
-                    coverUrl: s.coverUrl,
-                    audioUrl: s.fileUrl
-                }));
-
-                const uniqueArtistsIds = new Set();
-                const mappedArtists: Artist[] = [];
-                data.forEach((s: any) => {
-                    if (s.artist && !uniqueArtistsIds.has(s.artist._id)) {
-                        uniqueArtistsIds.add(s.artist._id);
-                        mappedArtists.push({
-                            id: s.artist._id,
-                            name: s.artist.name,
-                            imageUrl: s.artist.imageUrl || 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-artist.png',
-                            genre: s.artist.genre || 'Artist',
-                            followers: s.artist.followers?.toString() || '0'
-                        });
-                    }
-                });
-
-                setSongs(mappedSongs);
-                setArtists(mappedArtists);
-            } catch (error) {
-                console.error("Failed to fetch full search results:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchResults();
-    }, [query]);
+    const songs = data?.songs || [];
+    const artists = data?.artists || [];
 
     if (!query) {
         return (

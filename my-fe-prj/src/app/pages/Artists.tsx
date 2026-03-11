@@ -1,84 +1,92 @@
+import { useMemo } from "react";
+import { API_URL } from "../apiConfig";
+import { useQuery } from "@tanstack/react-query";
 import { useOutletContext, useNavigate } from "react-router";
 import { Play, UserCheck, Music2, Loader2 } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
-import { useState, useEffect } from "react";
-import { API_URL } from "../apiConfig";
 
 interface OutletContext {
   onSongSelect: (song: Song) => void;
 }
 
+const mapArtist = (a: any): Artist => ({
+  id: a._id || a.id,
+  name: a.name,
+  imageUrl: a.imageUrl || 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-artist.png',
+  followers: a.followers?.toLocaleString() || "0",
+  genre: a.genre || "Artist"
+});
+
+const mapSong = (s: any): Song => ({
+  id: s._id,
+  title: s.title,
+  artist: s.artist?.name || "Unknown Artist",
+  album: "Single",
+  duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
+  coverUrl: s.coverUrl,
+  audioUrl: s.fileUrl
+});
+
+const fetchTrendingArtists = async (): Promise<Artist[]> => {
+  const res = await fetch(`${API_URL}/artists/trending?limit=6`);
+  const data = await res.json();
+  return data.map(mapArtist);
+};
+
+const fetchAllArtists = async (): Promise<Artist[]> => {
+  const res = await fetch(`${API_URL}/artists`);
+  const data = await res.json();
+  return data.map(mapArtist);
+};
+
+const fetchPopularTracks = async (): Promise<Song[]> => {
+  const res = await fetch(`${API_URL}/songs/popular?limit=8`);
+  const data = await res.json();
+  return data.map(mapSong);
+};
+
+const fetchFollowedArtists = async (): Promise<Set<string>> => {
+  const token = localStorage.getItem("token");
+  if (!token) return new Set();
+  const res = await fetch(`${API_URL}/auth/followed-artists`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) return new Set();
+  const data = await res.json();
+  return new Set(data.map((a: any) => a._id));
+};
+
 export function Artists() {
   const { onSongSelect } = useOutletContext<OutletContext>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [trendingArtists, setTrendingArtists] = useState<Artist[]>([]);
-  const [allArtists, setAllArtists] = useState<Artist[]>([]);
-  const [popularTracks, setPopularTracks] = useState<Song[]>([]);
-  const [followedArtists, setFollowedArtists] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch trending artists for spotlight and trending sections
-        const trendingRes = await fetch(`${API_URL}/artists/trending?limit=6`);
-        const trendingData = await trendingRes.json();
+  const { data: trendingArtists = [], isLoading: trendingLoading } = useQuery({
+    queryKey: ["trendingArtists"],
+    queryFn: fetchTrendingArtists,
+    staleTime: 1000 * 60 * 10,
+  });
 
-        // Fetch all artists
-        const allRes = await fetch(`${API_URL}/artists`);
-        const allData = await allRes.json();
+  const { data: allArtists = [], isLoading: allLoading } = useQuery({
+    queryKey: ["allArtists"],
+    queryFn: fetchAllArtists,
+    staleTime: 1000 * 60 * 30,
+  });
 
-        // Fetch popular tracks
-        const popularRes = await fetch(`${API_URL}/songs/popular?limit=8`);
-        const popularData = await popularRes.json();
+  const { data: popularTracks = [], isLoading: popularLoading } = useQuery({
+    queryKey: ["popularTracks"],
+    queryFn: fetchPopularTracks,
+    staleTime: 1000 * 60 * 5,
+  });
 
-        // Map backend data to frontend interfaces
-        const mapArtist = (a: any): Artist => ({
-          id: a._id || a.id,
-          name: a.name,
-          imageUrl: a.imageUrl || 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-artist.png',
-          followers: a.followers?.toLocaleString() || "0",
-          genre: a.genre || "Artist"
-        });
+  const { data: followedArtists = new Set<string>(), refetch: refetchFollowed } = useQuery({
+    queryKey: ["followedArtists"],
+    queryFn: fetchFollowedArtists,
+  });
 
-        const mapSong = (s: any): Song => ({
-          id: s._id,
-          title: s.title,
-          artist: s.artist?.name || "Unknown Artist",
-          album: "Single",
-          duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
-          coverUrl: s.coverUrl,
-          audioUrl: s.fileUrl
-        });
-
-        setTrendingArtists(trendingData.map(mapArtist));
-        setAllArtists(allData.map(mapArtist));
-        setPopularTracks(popularData.map(mapSong));
-
-        // Fetch followed artists if logged in
-        const token = localStorage.getItem("token");
-        if (token) {
-          const followedRes = await fetch(`${API_URL}/auth/followed-artists`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (followedRes.ok) {
-            const followedData = await followedRes.json();
-            setFollowedArtists(new Set(followedData.map((a: any) => a._id)));
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch artists data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const loading = trendingLoading || allLoading || popularLoading;
 
   const handleFollow = async (artistId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // prevent navigation
+    e.stopPropagation();
     if (followedArtists.has(artistId)) return;
     try {
       const token = localStorage.getItem("token");
@@ -91,7 +99,7 @@ export function Artists() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        setFollowedArtists(prev => new Set(prev).add(artistId));
+        refetchFollowed();
       }
     } catch (error) {
       console.error("Failed to follow artist:", error);

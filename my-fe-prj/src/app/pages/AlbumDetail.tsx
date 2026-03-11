@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import { API_URL } from "../apiConfig";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate, useOutletContext } from "react-router";
 import { Play, Clock, Music, Loader2, ChevronLeft, Calendar, Disc } from "lucide-react";
 import { Song } from "../data/mockData";
@@ -18,49 +18,42 @@ interface OutletContext {
     onSongSelect: (song: Song) => void;
 }
 
+const fetchAlbumDetail = async (id: string): Promise<AlbumDetailData> => {
+    const response = await fetch(`${API_URL}/playlists/${id}`);
+    if (!response.ok) throw new Error("Album not found");
+
+    const data = await response.json();
+
+    return {
+        id: data._id,
+        name: data.name,
+        artistName: data.artistName || "Unknown Artist",
+        thumbnail: data.thumbnail || "https://marketplace.canva.com/EAFiB-8g3-E/1/0/1600w/canva-black-minimalist-vinyl-record-album-cover-gBwZOS_0A_w.jpg",
+        description: data.description || "",
+        createdAt: data.createdAt,
+        songs: (data.songs || []).map((s: any) => ({
+            id: s._id,
+            title: s.title,
+            artist: data.artistName,
+            album: data.name,
+            duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
+            coverUrl: s.coverUrl,
+            audioUrl: s.fileUrl
+        }))
+    };
+};
+
 export function AlbumDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { onSongSelect } = useOutletContext<OutletContext>();
 
-    const [loading, setLoading] = useState(true);
-    const [album, setAlbum] = useState<AlbumDetailData | null>(null);
-
-    useEffect(() => {
-        const fetchAlbumDetail = async () => {
-            if (!id) return;
-            try {
-                const response = await fetch(`${API_URL}/playlists/${id}`);
-                if (!response.ok) throw new Error("Album not found");
-
-                const data = await response.json();
-
-                setAlbum({
-                    id: data._id,
-                    name: data.name,
-                    artistName: data.artistName || "Unknown Artist",
-                    thumbnail: data.thumbnail || "https://marketplace.canva.com/EAFiB-8g3-E/1/0/1600w/canva-black-minimalist-vinyl-record-album-cover-gBwZOS_0A_w.jpg",
-                    description: data.description || "",
-                    createdAt: data.createdAt,
-                    songs: (data.songs || []).map((s: any) => ({
-                        id: s._id,
-                        title: s.title,
-                        artist: data.artistName,
-                        album: data.name,
-                        duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
-                        coverUrl: s.coverUrl,
-                        audioUrl: s.fileUrl
-                    }))
-                });
-            } catch (error) {
-                console.error("Failed to fetch album details:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchAlbumDetail();
-    }, [id]);
+    const { data: album, isLoading: loading } = useQuery({
+        queryKey: ["album", id],
+        queryFn: () => fetchAlbumDetail(id!),
+        enabled: !!id,
+        staleTime: 1000 * 60 * 30, // 30 minutes
+    });
 
     if (loading) {
         return (

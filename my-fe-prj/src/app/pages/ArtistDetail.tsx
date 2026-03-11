@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import { API_URL } from "../apiConfig";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router";
 import { Play, Loader2, UserCheck } from "lucide-react";
 import { Song, Artist } from "../data/mockData";
@@ -9,77 +9,83 @@ interface OutletContext {
     onSongSelect: (song: Song) => void;
 }
 
+const fetchArtist = async (id: string): Promise<Artist> => {
+    const res = await fetch(`${API_URL}/artists/${id}`);
+    if (!res.ok) throw new Error("Artist not found");
+    const data = await res.json();
+    return {
+        id: data._id,
+        name: data.name,
+        imageUrl: data.imageUrl || 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-artist.png',
+        genre: data.genre || 'Artist',
+        followers: data.followers?.toLocaleString() || '0',
+        bio: data.bio || 'Mô tả về nghệ sĩ chưa được cập nhật.'
+    } as any;
+};
+
+const fetchArtistSongs = async (id: string, artistName: string): Promise<Song[]> => {
+    const res = await fetch(`${API_URL}/songs/artist/${id}`);
+    const data = await res.json();
+    return data.map((s: any) => ({
+        id: s._id,
+        title: s.title,
+        artist: s.artist?.name || artistName,
+        album: "Single",
+        duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
+        coverUrl: s.coverUrl,
+        audioUrl: s.fileUrl
+    }));
+};
+
+const fetchArtistAlbums = async (artistName: string) => {
+    const token = localStorage.getItem("token");
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${API_URL}/playlists/albums?artistName=${encodeURIComponent(artistName)}`, { headers });
+    if (!res.ok) return [];
+    return await res.json();
+};
+
+const checkIsFollowing = async (id: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    const res = await fetch(`${API_URL}/auth/followed-artists`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.some((a: any) => a._id === id);
+};
+
 export function ArtistDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { onSongSelect } = useOutletContext<OutletContext>();
 
-    const [loading, setLoading] = useState(true);
-    const [isFollowing, setIsFollowing] = useState(false);
-    const [artist, setArtist] = useState<Artist | null>(null);
-    const [songs, setSongs] = useState<Song[]>([]);
-    const [albums, setAlbums] = useState<any[]>([]);
+    const { data: artist, isLoading: artistLoading } = useQuery({
+        queryKey: ["artist", id],
+        queryFn: () => fetchArtist(id!),
+        enabled: !!id,
+    });
 
-    useEffect(() => {
-        const fetchArtistData = async () => {
-            if (!id) return;
-            setLoading(true);
-            try {
-                // Fetch Artist
-                const artistRes = await fetch(`${API_URL}/artists/${id}`);
-                if (!artistRes.ok) throw new Error("Artist not found");
-                const artistData = await artistRes.json();
+    const { data: songs = [], isLoading: songsLoading } = useQuery({
+        queryKey: ["artistSongs", id],
+        queryFn: () => fetchArtistSongs(id!, artist?.name || ""),
+        enabled: !!id && !!artist,
+    });
 
-                setArtist({
-                    id: artistData._id,
-                    name: artistData.name,
-                    imageUrl: artistData.imageUrl || 'https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-artist.png',
-                    genre: artistData.genre || 'Artist',
-                    followers: artistData.followers?.toLocaleString() || '0',
-                    bio: artistData.bio || 'Mô tả về nghệ sĩ chưa được cập nhật.'
-                } as any);
+    const { data: albums = [], isLoading: albumsLoading } = useQuery({
+        queryKey: ["artistAlbums", artist?.name],
+        queryFn: () => fetchArtistAlbums(artist!.name),
+        enabled: !!artist,
+    });
 
-                // Fetch Songs
-                const songsRes = await fetch(`${API_URL}/songs/artist/${id}`);
-                const songsData = await songsRes.json();
-                setSongs(songsData.map((s: any) => ({
-                    id: s._id,
-                    title: s.title,
-                    artist: s.artist?.name || artistData.name,
-                    album: "Single",
-                    duration: `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}`,
-                    coverUrl: s.coverUrl,
-                    audioUrl: s.fileUrl
-                })));
+    const { data: isFollowing = false, refetch: refetchFollowing } = useQuery({
+        queryKey: ["isFollowing", id],
+        queryFn: () => checkIsFollowing(id!),
+        enabled: !!id,
+    });
 
-                // Fetch Albums (Playlists with type=album)
-                const token = localStorage.getItem("token");
-                const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-
-                const albumsRes = await fetch(`${API_URL}/playlists/albums?artistName=${encodeURIComponent(artistData.name)}`, { headers });
-                if (albumsRes.ok) {
-                    const albumsData = await albumsRes.json();
-                    setAlbums(albumsData);
-                }
-
-                // Fetch if following
-                if (token) {
-                    const followedRes = await fetch(`${API_URL}/auth/followed-artists`, { headers });
-                    if (followedRes.ok) {
-                        const followedData = await followedRes.json();
-                        setIsFollowing(followedData.some((a: any) => a._id === id));
-                    }
-                }
-
-            } catch (error) {
-                console.error("Failed to load artist details:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchArtistData();
-    }, [id]);
+    const loading = artistLoading || songsLoading || albumsLoading;
 
     const handleFollow = async () => {
         if (!artist || isFollowing) return;
@@ -94,13 +100,7 @@ export function ArtistDetail() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                // Remove commas and parse to int, increment, then put commas back
-                const currentFollowers = parseInt(artist.followers.replace(/,/g, '')) || 0;
-                setArtist(prev => prev ? {
-                    ...prev,
-                    followers: (currentFollowers + 1).toLocaleString()
-                } : null);
-                setIsFollowing(true);
+                refetchFollowing();
             }
         } catch (error) {
             console.error("Failed to follow artist:", error);
@@ -212,7 +212,7 @@ export function ArtistDetail() {
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-6">Albums</h2>
                                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {albums.map((album) => (
+                                    {albums.map((album: any) => (
                                         <div key={album._id} className="bg-zinc-900/40 p-4 rounded-2xl hover:bg-zinc-800/60 transition-all cursor-pointer group">
                                             <div className="relative mb-4">
                                                 <img src={album.thumbnail || 'https://marketplace.canva.com/EAFiB-8g3-E/1/0/1600w/canva-black-minimalist-vinyl-record-album-cover-gBwZOS_0A_w.jpg'} alt={album.name} className="w-full aspect-square object-cover rounded-xl shadow-lg" />
