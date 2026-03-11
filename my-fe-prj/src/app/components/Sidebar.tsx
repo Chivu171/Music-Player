@@ -1,6 +1,6 @@
 import { Home, TrendingUp, Music, Album, User, ShieldCheck } from "lucide-react";
 import { Link, useLocation } from "react-router";
-import logo from "../assets/logo.jpg";
+import logo from "../../assets/logo.jpg";
 
 export function Sidebar() {
   const location = useLocation();

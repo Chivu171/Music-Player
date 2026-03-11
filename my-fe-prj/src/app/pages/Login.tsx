@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { API_URL } from "../apiConfig";
 import { Link, useNavigate } from "react-router";
 import { Music2, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
-import logo from "../assets/logo.jpg";
+import logo from "../../assets/logo.jpg";
 
 export function Login() {
     const [email, setEmail] = useState("");
