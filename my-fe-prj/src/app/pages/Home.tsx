@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { API_URL } from "../apiConfig";
-import { Sunrise, Sun, Moon } from "lucide-react";
+import { Sunrise, Sun, Moon, History } from "lucide-react";
 import { useOutletContext } from "react-router";
 import { SongCard } from "../components/SongCard";
 import { mockSongs, Song } from "../data/mockData";
@@ -28,6 +28,35 @@ const fetchSongs = async (): Promise<Song[]> => {
   }));
 };
 
+const fetchHistory = async (): Promise<Song[]> => {
+  const token = localStorage.getItem("token");
+  if (!token) return [];
+
+  const response = await fetch(`${API_URL}/auth/history`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) return [];
+  const data = await response.json();
+
+  // Data is array of { song: { ... }, listenedAt: ... }
+  return (data || []).map((item: any) => {
+    const s = item.song;
+    if (!s) return null;
+    return {
+      id: s._id,
+      title: s.title,
+      artist: typeof s.artist === 'object' ? s.artist.name : (s.artist || "Unknown Artist"),
+      album: s.album || "Single",
+      duration: s.duration ? `${Math.floor(s.duration / 60)}:${Math.floor(s.duration % 60).toString().padStart(2, '0')}` : "0:00",
+      coverUrl: s.coverUrl || "https://res.cloudinary.com/dywwla9mp/image/upload/v1/default-song.png",
+      audioUrl: s.fileUrl
+    };
+  }).filter(Boolean);
+};
+
 export function Home() {
   const { onSongSelect } = useOutletContext<OutletContext>();
 
@@ -35,6 +64,12 @@ export function Home() {
     queryKey: ["songs"],
     queryFn: fetchSongs,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  const { data: historySongs = [], isLoading: historyLoading } = useQuery<Song[]>({
+    queryKey: ["history"],
+    queryFn: fetchHistory,
+    staleTime: 1000 * 30, // 30 seconds
   });
 
   const { text: greeting, subtext: greetingSubtext, icon: greetingIcon } = useMemo(() => {
@@ -45,7 +80,7 @@ export function Home() {
   }, []);
 
   const featuredSongs = songs.slice(0, 4);
-  const recentlyPlayed = songs.slice(0, 6); // Mocking recently played with random DB songs as requested
+  const recentlyPlayed = historySongs.slice(0, 6);
 
   if (loading) {
     return (
