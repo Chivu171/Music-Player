@@ -1,6 +1,7 @@
 const User = require('./auth.model')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const Artist = require('../artist/artist.model');
 
 const registerUser = async (userData) => {
     const existingUser = await User.findOne({ email: userData.email });
@@ -173,6 +174,10 @@ const followArtist = async (userId, artistId) => {
 
     user.followingArtists.push(artistId);
     await user.save();
+
+    // Tăng số lượng followers của artist
+    await Artist.findByIdAndUpdate(artistId, { $inc: { followers: 1 } });
+
     return user;
 };
 
@@ -180,8 +185,16 @@ const unfollowArtist = async (userId, artistId) => {
     const user = await User.findById(userId);
     if (!user) throw new Error('User not found');
 
-    user.followingArtists = user.followingArtists.filter(id => id.toString() !== artistId);
+    if (!user.followingArtists.includes(artistId)) {
+        return user; // Hoặc ném lỗi nếu muốn
+    }
+
+    user.followingArtists = user.followingArtists.filter(id => id.toString() !== artistId.toString());
     await user.save();
+
+    // Giảm số lượng followers của artist
+    await Artist.findByIdAndUpdate(artistId, { $inc: { followers: -1 } });
+
     return user;
 };
 

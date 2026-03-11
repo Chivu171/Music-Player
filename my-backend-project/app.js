@@ -32,7 +32,32 @@ const cors = require('cors'); // <-- 1. IMPORT THƯ VIỆN
 
 // Middleware để đọc JSON từ request body
 app.use(express.json());
-app.use(cors()); // <-- DÒNG QUAN TRỌNG NHẤT
+
+// Cấu hình CORS
+const allowedOrigins = [
+  'http://localhost:5173', // Local development
+  'http://localhost:3000',
+  /\.vercel\.app$/        // All Vercel deployments
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Cho phép các request không có origin (như mobile apps hoặc curl)
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) return allowed.test(origin);
+      return allowed === origin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Cross-Origin Request Blocked by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 
 // Một API endpoint đơn giản để kiểm tra
