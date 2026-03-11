@@ -276,26 +276,28 @@ export function Artists() {
         </div>
       </section>
 
-      {/* Popular Tracks Section */}
+      {/* Popular Tracks Section - Premium Chart Look */}
       {popularTracks.length > 0 && (
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <h2 className="text-2xl font-bold text-white">Popular Tracks from Top Artists</h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-zinc-800 to-transparent" />
-          </div>
-          <div className="bg-zinc-900/20 rounded-2xl border border-white/5 overflow-hidden backdrop-blur-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y divide-white/5 md:divide-y-0 md:divide-x divide-white/5">
-              <div className="flex flex-col">
-                {popularTracks.slice(0, 4).map((song) => (
-                  <TrackItem key={song.id} song={song} onSongSelect={onSongSelect} />
-                ))}
-              </div>
-              <div className="flex flex-col">
-                {popularTracks.slice(4, 8).map((song) => (
-                  <TrackItem key={song.id} song={song} onSongSelect={onSongSelect} />
-                ))}
-              </div>
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-1.5 h-8 bg-green-500 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
+              <h2 className="text-3xl font-black text-white tracking-tight uppercase italic">Top Releases</h2>
             </div>
+            <button className="text-xs font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest px-6 py-2 border border-white/5 rounded-full hover:bg-white/5">
+              Refreshed Daily
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-2 bg-zinc-900/20 p-4 rounded-[32px] border border-white/5 backdrop-blur-xl">
+            {popularTracks.slice(0, 8).map((song, index) => (
+              <TrackItem
+                key={song.id}
+                song={song}
+                index={index + 1}
+                onSongSelect={onSongSelect}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -303,27 +305,47 @@ export function Artists() {
   );
 }
 
-function TrackItem({ song, onSongSelect }: { song: Song; onSongSelect: (song: Song) => void }) {
+function TrackItem({ song, index, onSongSelect }: { song: Song; index: number; onSongSelect: (song: Song) => void }) {
   return (
     <div
       onClick={() => onSongSelect(song)}
-      className="p-4 hover:bg-white/5 cursor-pointer group flex items-center gap-4 transition-colors"
+      className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-white/[0.03] transition-all duration-300 cursor-pointer relative overflow-hidden active:scale-[0.98]"
     >
-      <div className="relative">
-        <img
-          src={song.coverUrl}
-          alt={song.title}
-          className="w-14 h-14 rounded-lg object-cover shadow-lg"
-        />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
-          <Play size={20} className="text-white" fill="currentColor" />
+      {/* Background Glow on Hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+      <div className="flex items-center gap-6 relative z-10 w-full">
+        <span className="text-2xl font-black text-zinc-700 w-8 group-hover:text-green-500/50 transition-colors italic tracking-tighter">
+          {index.toString().padStart(2, '0')}
+        </span>
+
+        <div className="relative flex-shrink-0">
+          <img
+            src={song.coverUrl}
+            alt={song.title}
+            className="w-16 h-16 rounded-xl object-cover shadow-2xl group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 rounded-xl backdrop-blur-[2px]">
+            <Play size={24} className="text-white scale-75 group-hover:scale-100 transition-transform" fill="currentColor" />
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h4 className="text-white font-bold text-lg truncate group-hover:text-green-400 transition-colors tracking-tight">
+            {song.title}
+          </h4>
+          <p className="text-zinc-400 text-sm font-medium truncate group-hover:text-zinc-300 transition-colors">
+            {song.artist}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="h-6 w-px bg-white/5" />
+          <span className="text-sm font-bold text-zinc-600 tabular-nums group-hover:text-zinc-400 transition-colors">
+            {song.duration}
+          </span>
         </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <h4 className="text-white font-semibold truncate group-hover:text-green-400 transition-colors">{song.title}</h4>
-        <p className="text-sm text-zinc-400 truncate">{song.artist}</p>
-      </div>
-      <span className="text-sm font-medium text-zinc-500 tabular-nums">{song.duration}</span>
     </div>
   );
 }
