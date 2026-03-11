@@ -1,3 +1,4 @@
+const Artist = require('./artist.model');
 const Song = require('../song/song.model');
 const { getOrSetCache, clearCache } = require('../../shared/utils/cache');
 

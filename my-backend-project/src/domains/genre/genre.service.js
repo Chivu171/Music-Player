@@ -1,7 +1,10 @@
 const Genre = require('./genre.model');
+const { getOrSetCache, clearCache } = require('../../shared/utils/cache');
 
 const getAllGenres = async () => {
-    return await Genre.find();
+    return await getOrSetCache('genres:all', async () => {
+        return await Genre.find();
+    });
 };
 
 const getGenreById = async (id) => {
@@ -12,7 +15,9 @@ const getGenreById = async (id) => {
 
 const createGenre = async (genreData) => {
     const newGenre = new Genre(genreData);
-    return await newGenre.save();
+    const saved = await newGenre.save();
+    await clearCache('genres:all');
+    return saved;
 };
 
 const updateGenre = async (id, updateData) => {
